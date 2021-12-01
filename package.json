@@ -1,0 +1,30 @@
+{
+  "name": "easy-mysql",
+  "version": "1.0.0",
+  "description": "基于node-mysql2的快速CURD工具",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bulid": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lancernix/easy-mysql.git"
+  },
+  "keywords": [
+    "node",
+    "mysql"
+  ],
+  "author": "lancernix",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lancernix/easy-mysql/issues"
+  },
+  "homepage": "https://github.com/Lancernix/easy-mysql#readme",
+  "dependencies": {
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.2"
+  }
+}
