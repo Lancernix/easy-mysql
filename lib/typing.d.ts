@@ -36,6 +36,8 @@ declare const ColumnValueError: IColumnValueErrorConstructor;
  */
 declare const AND = 'AND';
 
+declare const PLACEHOLDER = '?';
+
 declare enum EOperator {
   eq = '=',
   ne = '!=',
