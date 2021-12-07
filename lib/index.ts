@@ -1,4 +1,5 @@
 import { createPool, createConnection, ConnectionOptions, Pool, Query } from 'mysql2';
+import { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc } from './operator';
 
 class MySQLClient {
   pool: Pool;
@@ -26,84 +27,71 @@ class MySQLClient {
 
   async select(params: IQueryParams): Promise<Query> {
     const { table, columns, options, orders, limit = 1, offset = 0 } = params;
-    let _sql: string,
-      _columnStr: string,
-      _where: string,
-      _optionValues: unknown[] = [],
-      _order: string,
-      _limit: string;
-    _columnStr = typeof columns === undefined || !columns?.length ? '*' : columns.join(', ');
-    if (typeof options === undefined || !options?.length) {
-      _where = '';
-    }
-    _where = 'WHERE ';
-    for (let i = 0; i < (options as TOption[]).length; i++) {
-      let optionStr: string = '';
-      const item = options as TOption[];
-      if (item[i].length !== 3) {
-        throw OptionError('every option need 3 elements!');
-      }
-      switch (item[i][0]) {
-        case EOperator.eq:
-        case EOperator.gt:
-        case EOperator.lt:
-        case EOperator.ge:
-        case EOperator.le:
-        case EOperator.ne:
-        case EOperator.like:
-          if (Array.isArray(item[i][2])) {
-            throw ColumnValueError(`${item[i][0]} operator's column value is not a array!`);
-          }
-          optionStr = `${item[i][1]} ${item[i][0]} ${PLACEHOLDER}`;
-          _optionValues.push(item[i][2]);
-          break;
-        case EOperator.bw:
-          if (!Array.isArray(item[i][2]) || (item[i][2] as Array<unknown>).length !== 2) {
-            throw ColumnValueError(`${item[i][0]} operator's column value should be a array with 2 element!`);
-          }
-          optionStr = `${item[i][1]} ${item[i][0]} ${PLACEHOLDER} ${AND} ${PLACEHOLDER}`;
-          _optionValues.push(...(item[i][2] as Array<unknown>));
-          break;
-        case EOperator.in:
-        case EOperator.ni:
-          if (!Array.isArray(item[i][2]) || (item[i][2] as Array<unknown>).length === 0) {
-            throw ColumnValueError(`${item[i][0]} operator's column value need a non-empty array!`);
-          }
-          optionStr = `${item[i][1]} ${item[i][0]} (`;
-          for (let j = 0; i < (item[i][2] as Array<unknown>).length; j++) {
-            optionStr += `${PLACEHOLDER}, `;
-          }
-          optionStr = optionStr.replace(/,\s$/, '') + ')';
-          _optionValues.push(...(item[i][2] as Array<unknown>));
-          break;
-        // TODO: OR 如何实现
-        case EOperator.or:
-          if (
-            !Array.isArray(item[i][1]) ||
-            !Array.isArray(item[i][2]) ||
-            item[i][1].length !== (item[i][2] as Array<unknown>).length
-          ) {
-            throw ColumnValueError(`OR operator's column names or values are invalid!`);
-          }
-          optionStr = '(';
-          for (let j = 0; j < (item[i][1] as Array<unknown>).length; j++) {
-            optionStr += `${item[i][1][j]} `;
-          }
-          break;
-        default:
-          throw OperatorError(`${item[i][0]} is not a valid operator!`);
-      }
-    }
-
+    let sql: string,
+      columnStr: string,
+      where: string,
+      optionValues: unknown[] = [],
+      order: string,
+      limitStr: string;
+    // columns
+    columnStr = typeof columns === undefined || !columns?.length ? '*' : columns.join(', ');
+    // order
     if (typeof orders === undefined || !orders?.length) {
-      _order = '';
+      order = '';
+    } else {
+      order = orders.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, 'ORDER BY').replace(/,$/, '');
     }
-    _order = (orders as TOrder[]).reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, 'ORDER BY').replace(/,$/, '');
-    _limit = `LIMIT ${offset}, ${limit}`;
-    _sql = `SELECT ${_columnStr} FROM ${table} ${_where} ${_order} ${_limit}`;
-    _optionValues = [''];
-
-    return this._query(_sql, _optionValues);
+    // limit
+    limitStr = `LIMIT ${offset}, ${limit}`;
+    // where
+    if (typeof options === undefined || !options?.length) {
+      where = '';
+    } else {
+      where = 'WHRER ';
+      for (let i = 0; i < options.length; i++) {
+        if (!(options[i] instanceof Array) || !options[i].length) {
+          throw OptionError('every option should be a non-empty array!');
+        }
+        const item = options[i];
+        switch (item[0]) {
+          case EOperator.eq:
+          case EOperator.gt:
+          case EOperator.lt:
+          case EOperator.ge:
+          case EOperator.le:
+          case EOperator.ne:
+          case EOperator.like:
+            const [_str, _values] = commonOpFunc(item);
+            where += _str;
+            optionValues.push(..._values);
+            break;
+          case EOperator.bw:
+            const [_strBw, _valuesBw] = bwOpFunc(item);
+            where += _strBw;
+            optionValues.push(..._valuesBw);
+            break;
+          case EOperator.in:
+          case EOperator.ni:
+            const [_strI, _valuesI] = inAndNiOpFunc(item);
+            where += _strI;
+            optionValues.push(..._valuesI);
+            break;
+          case EOperator.or:
+            const [_strOr, _valuesOr] = orOpFunc(item as TOrOption);
+            where += _strI;
+            optionValues.push(..._valuesI);
+            break;
+          default:
+            throw OperatorError(`${item[0]} is not a valid operator!`);
+        }
+        i !== options.length - 1 && (where += ' AND ');
+      }
+    }
+    // prepared statement
+    sql = `SELECT ${columnStr} FROM ${table} ${where} ${order} ${limitStr}`;
+    console.log(sql);
+    console.log(optionValues);
+    return this._query(sql, optionValues);
   }
 }
 

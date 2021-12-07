@@ -56,12 +56,16 @@ declare type TColumns = string[];
 
 declare type TOption = [EOperator, string | string[], unknown];
 
+declare type TOrOption = [EOperator.or, ...TOption[]];
+
 declare type TOrder = [string, 'desc' | 'asc'];
+
+declare type TOpFuncRet = [string, unknown[]];
 
 declare interface IQueryParams {
   table: string;
   columns?: TColumns[];
-  options?: TOption[];
+  options?: (TOption | TOrOption)[];
   orders?: TOrder[];
   limit?: number;
   offset?: number;
