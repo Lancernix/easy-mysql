@@ -16,11 +16,14 @@ const test = async () => {
     options: [
       [EOperator.eq, 'status', 1],
       [EOperator.like, 'create_user_id', '014%'],
-      [EOperator.or, []]
+      [EOperator.or, []],
     ],
     limit: 50,
   });
   console.log(res);
-}
+};
 
-test();
+// test();
+
+let a = {};
+console.log(Object.keys(a).length);
