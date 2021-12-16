@@ -5,6 +5,7 @@ import {
   ColumnValueError,
   PLACEHOLDER,
   AND,
+  OR,
   TOrOption,
   Operator,
   OperatorError,
@@ -114,18 +115,15 @@ const inAndNiOpFunc = (key: MultiOperator, val: MultiOptionValue | MultiOptionVa
 // };
 
 // or
-const orOpFunc = (key: OrOperator, val: OrOptionValue[]): OpFuncRet => {
-  if (!Array.isArray(val)) {
-    throw OptionError('or option value should be an array!');
+const orOpFunc = (key: OrOperator, val: Partial<OrOptionValue>): OpFuncRet => {
+  const keyArr = Object.keys(val);
+  if (keyArr.length < 2) {
+    throw OptionError('or option value should have least 2 keys!');
   }
-  if (val.length < 2) {
-    throw OptionError('or option array should at least have two elements!');
-  }
-  let optionStr: string = '';
+  let optionStr: string = '(';
   const values: (string | number)[] = [];
-  for (let i = 0; i < val.length; i++) {
-    const item = val[i];
-    const key = Object.keys(item)[0];
+  for (let i = 0; i < keyArr.length; i++) {
+    const key = keyArr[i];
     switch (key) {
       case SingleOperator.eq:
       case SingleOperator.ge:
@@ -134,74 +132,73 @@ const orOpFunc = (key: OrOperator, val: OrOptionValue[]): OpFuncRet => {
       case SingleOperator.lt:
       case SingleOperator.ne:
       case SingleOperator.like:
-        item[key];
-        const [_str, _values] = commonOpFunc(key, item[key] as SingleOptionValue);
-        result += _str;
-        optionVals.push(..._values);
+        const [_str1, _values1] = commonOpFunc(key, val[key]!);
+        optionStr += _str1;
+        values.push(..._values1);
         break;
       case MultiOperator.bw:
+        const [_str2, _values2] = bwOpFunc(key, val[key]!);
+        optionStr += _str2;
+        values.push(..._values2);
         break;
       case MultiOperator.in:
       case MultiOperator.ni:
-        break;
-      case OrOperator.or:
+        const [_str3, _values3] = inAndNiOpFunc(key, val[key]!);
+        optionStr += _str3;
+        values.push(..._values3);
         break;
       default:
-        throw OperatorError(`${key} is not a valid operator!`);
+        throw OperatorError(`${key} is not a valid operator in or option!`);
     }
-    optionStr +=
-      i === val.length - 1
-        ? `${val[i].column} ${Operator[key]} (${PLACEHOLDER}, ${PLACEHOLDER})`
-        : `${val[i].column} ${Operator[key]} (${PLACEHOLDER}, ${PLACEHOLDER}) ${AND} `;
-    values.push(...val[i].value);
+    optionStr += i === keyArr.length - 1 ? ')' : ` ${OR} `;
   }
   return [optionStr, values];
 };
 
 // or
-const orOpFunc = (params: TOrOption): OpFuncRet => {
-  if (!(params instanceof Array) || params.length < 3) {
-    throw OptionError(`OR option is an array with least 3 elements!`);
-  }
-  let optionStr: string = '(';
-  let optionValues: unknown[] = [];
-  for (let _index = 1; _index < params.length; _index++) {
-    const element = params[_index];
-    if (!(element instanceof Array)) {
-      throw OptionError(`OR option rest elements should be a TOption array!`);
-    }
-    switch (element[0]) {
-      case Operator.eq:
-      case Operator.gt:
-      case Operator.lt:
-      case Operator.ge:
-      case Operator.le:
-      case Operator.ne:
-      case Operator.like:
-        const [_str1, _values1] = commonOpFunc(element);
-        optionStr += _str1;
-        optionValues.push(..._values1);
-        break;
-      case Operator.bw:
-        const [_str2, _values2] = bwOpFunc(element);
-        optionStr += _str2;
-        optionValues.push(..._values2);
-        break;
-      case Operator.in:
-      case Operator.ni:
-        const [_str3, _values3] = inAndNiOpFunc(element);
-        optionStr += _str3;
-        optionValues.push(..._values3);
-        break;
-      case Operator.or:
-        throw OperatorError(`nested OR is not allowed!`);
-      default:
-        throw OperatorError(`${element[0]} is not a valid operator!`);
-    }
-    optionStr += _index !== params[2].length - 1 ? ' or ' : ')';
-  }
-  // optionStr = optionStr.replace(/\sor\s$/, '') + ')';
-  return [optionStr, optionValues];
-};
+// const orOpFunc = (params: TOrOption): OpFuncRet => {
+//   if (!(params instanceof Array) || params.length < 3) {
+//     throw OptionError(`OR option is an array with least 3 elements!`);
+//   }
+//   let optionStr: string = '(';
+//   let optionValues: unknown[] = [];
+//   for (let _index = 1; _index < params.length; _index++) {
+//     const element = params[_index];
+//     if (!(element instanceof Array)) {
+//       throw OptionError(`OR option rest elements should be a TOption array!`);
+//     }
+//     switch (element[0]) {
+//       case Operator.eq:
+//       case Operator.gt:
+//       case Operator.lt:
+//       case Operator.ge:
+//       case Operator.le:
+//       case Operator.ne:
+//       case Operator.like:
+//         const [_str1, _values1] = commonOpFunc(element);
+//         optionStr += _str1;
+//         optionValues.push(..._values1);
+//         break;
+//       case Operator.bw:
+//         const [_str2, _values2] = bwOpFunc(element);
+//         optionStr += _str2;
+//         optionValues.push(..._values2);
+//         break;
+//       case Operator.in:
+//       case Operator.ni:
+//         const [_str3, _values3] = inAndNiOpFunc(element);
+//         optionStr += _str3;
+//         optionValues.push(..._values3);
+//         break;
+//       case Operator.or:
+//         throw OperatorError(`nested OR is not allowed!`);
+//       default:
+//         throw OperatorError(`${element[0]} is not a valid operator!`);
+//     }
+//     optionStr += _index !== params[2].length - 1 ? ' or ' : ')';
+//   }
+//   // optionStr = optionStr.replace(/\sor\s$/, '') + ')';
+//   return [optionStr, optionValues];
+// };
 
 export { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc };

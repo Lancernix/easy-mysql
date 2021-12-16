@@ -41,6 +41,8 @@ export const INSERT = 'INSERT';
 
 export const AND = 'AND';
 
+export const OR = 'OR';
+
 export const WHRER = 'WHERE';
 
 export const ORDER = 'ORDER BY';
@@ -83,24 +85,16 @@ export enum OrOperator {
   or = 'or',
 }
 
-export type OrOptionValue =
-  | Record<SingleOperator.eq, SingleOptionValue>
-  | Record<SingleOperator.ge, SingleOptionValue>
-  | Record<SingleOperator.gt, SingleOptionValue>
-  | Record<SingleOperator.le, SingleOptionValue>
-  | Record<SingleOperator.lt, SingleOptionValue>
-  | Record<SingleOperator.ne, SingleOptionValue>
-  | Record<SingleOperator.like, SingleOptionValue>
-  | Record<MultiOperator.bw, MultiOptionValue>
-  | Record<MultiOperator.in, MultiOptionValue>
-  | Record<MultiOperator.ni, MultiOptionValue>;
+export type OrOptionValue = Record<SingleOperator, SingleOptionValue> & Record<MultiOperator, MultiOptionValue>;
 
-export const a: OrOptionValue = {
-  eq: { column: 'id', value: 2 },
-  bw: { column: 'score', value: [70, 80] },
+type OrOption = Record<OrOperator, Partial<OrOptionValue>>;
+
+const a: OrOption = {
+  or: {
+    eq: { column: 'l', value: '1' },
+    bw: { column: 'm', value: [1, 2] },
+  },
 };
-
-type OrOption = Record<OrOperator, OrOptionValue[]>;
 
 export enum Operator {
   eq = '=',
