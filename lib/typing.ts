@@ -3,42 +3,106 @@
  */
 export interface IOptionError extends Error {}
 
-export interface IOptionErrorConstructor extends ErrorConstructor {
+export interface OptionErrorConstructor extends ErrorConstructor {
   new (message?: string): IOptionError;
   (message?: string): IOptionError;
   readonly prototype: IOptionError;
 }
 
-export let OptionError: IOptionErrorConstructor;
+export let OptionError: OptionErrorConstructor;
 
 export interface IOperatorError extends Error {}
 
-export interface IOperatorErrorConstructor extends ErrorConstructor {
+export interface OperatorErrorConstructor extends ErrorConstructor {
   new (message?: string): IOperatorError;
   (message?: string): IOperatorError;
   readonly prototype: IOperatorError;
 }
 
-export let OperatorError: IOperatorErrorConstructor;
+export let OperatorError: OperatorErrorConstructor;
 
-export interface IColumnValueError extends Error {}
+export interface ColumnValueError extends Error {}
 
-export interface IColumnValueErrorConstructor extends ErrorConstructor {
-  new (message?: string): IColumnValueError;
-  (message?: string): IColumnValueError;
-  readonly prototype: IColumnValueError;
+export interface ColumnValueErrorConstructor extends ErrorConstructor {
+  new (message?: string): ColumnValueError;
+  (message?: string): ColumnValueError;
+  readonly prototype: ColumnValueError;
 }
 
-export let ColumnValueError: IColumnValueErrorConstructor;
-
+export let ColumnValueError: ColumnValueErrorConstructor;
 /**
  * type define
  */
+export const SELECT = 'SELECT';
+
+export const FROM = 'FROM';
+
+export const INSERT = 'INSERT';
+
 export const AND = 'AND';
+
+export const WHRER = 'WHERE';
+
+export const ORDER = 'ORDER BY';
+
+export const LIMIT = 'LIMIT';
 
 export const PLACEHOLDER = '?';
 
-export enum EOperator {
+export enum SingleOperator {
+  eq = 'eq',
+  ne = 'ne',
+  gt = 'gt',
+  lt = 'lt',
+  ge = 'ge',
+  le = 'le',
+  like = 'like',
+}
+
+export interface SingleOptionValue {
+  column: string;
+  value: string | number;
+}
+
+type SingleOption = Record<SingleOperator, SingleOptionValue | SingleOptionValue[]>;
+
+export enum MultiOperator {
+  bw = 'bw',
+  in = 'in',
+  ni = 'ni',
+}
+
+export interface MultiOptionValue {
+  column: string;
+  value: (string | number)[];
+}
+
+type MultiOption = Record<MultiOperator, MultiOptionValue | MultiOptionValue[]>;
+
+export enum OrOperator {
+  or = 'or',
+}
+
+export type OrOptionValue =
+  | Record<SingleOperator.eq, SingleOptionValue>
+  | Record<SingleOperator.ge, SingleOptionValue>
+  | Record<SingleOperator.gt, SingleOptionValue>
+  | Record<SingleOperator.le, SingleOptionValue>
+  | Record<SingleOperator.lt, SingleOptionValue>
+  | Record<SingleOperator.ne, SingleOptionValue>
+  | Record<SingleOperator.like, SingleOptionValue>
+  | Record<MultiOperator.bw, MultiOptionValue>
+  | Record<MultiOperator.in, MultiOptionValue>
+  | Record<MultiOperator.ni, MultiOptionValue>;
+
+export const a: OrOptionValue = {
+  eq: { column: 'id', value: 2 },
+  bw: { column: 'score', value: [70, 80] },
+};
+
+type OrOption = Record<OrOperator, OrOptionValue[]>;
+
+export enum Operator {
   eq = '=',
   ne = '!=',
   gt = '>',
@@ -52,21 +116,24 @@ export enum EOperator {
   or = 'OR',
 }
 
-export type TColumns = string[];
+export type Option = SingleOption & MultiOption & OrOption;
 
-export type TOption = [EOperator, string | string[], unknown];
+export type Columns = string[];
 
-export type TOrOption = [EOperator.or, ...TOption[]];
+export type TOption = [Operator, string | string[], unknown];
+
+export type TOrOption = [Operator.or, ...TOption[]];
 
 export type TOrder = [string, 'desc' | 'asc'];
 
-export type TOpFuncRet = [string, unknown[]];
+export type OpFuncRet = [string, (string | number)[]];
 
 export interface IQueryParams {
   table: string;
-  columns?: TColumns[];
-  options?: (TOption | TOrOption)[];
-  orders?: TOrder[];
+  column?: Columns[];
+  // where?: (TOption | TOrOption)[];
+  where?: Option;
+  order?: TOrder[];
   limit?: number;
   offset?: number;
 }

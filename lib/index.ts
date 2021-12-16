@@ -47,7 +47,7 @@ class MySQLClient {
     if (typeof options === undefined || !options?.length) {
       where = '';
     } else {
-      where = 'WHRER ';
+      where = 'WHERE ';
       for (let i = 0; i < options.length; i++) {
         if (!(options[i] instanceof Array) || !options[i].length) {
           throw OptionError('every option should be a non-empty array!');

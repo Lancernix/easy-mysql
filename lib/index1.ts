@@ -1,5 +1,5 @@
-import { createPool, createConnection, ConnectionOptions, Pool, Query } from 'mysql2';
-import { EOperator, IQueryParams, OperatorError, OptionError, TOrOption } from './typing';
+import { createPool, createConnection, ConnectionOptions, Pool, FieldPacket } from 'mysql2';
+import { Operator, IQueryParams, OperatorError, OptionError, TOrOption } from './typing';
 import { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc } from './oprator1';
 
 class MySQLClient {
@@ -10,27 +10,15 @@ class MySQLClient {
   }
 
   // 内部调用查询函数
-  async _query(sql: string, values: any | any[] | { [param: string]: any }): Promise<Query> {
-    return this.pool.execute(sql, values);
+  async _query(sql: string, values: any | any[] | { [param: string]: any }) {
+    return this.pool.promise().execute(sql, values);
   }
 
-  // getConnection() {
-  //   const onErr = (err: NodeJS.ErrnoException) => {
-  //     err.name = 'MySQLConnectionError';
-  //     throw err;
-  //   };
-
-  //   const onConnection = params => {
-  //     return;
-  //   };
-  //   return this.pool.getConnection();
-  // }
-
-  async select(params: IQueryParams): Promise<Query> {
-    const { table, columns, options, orders, limit = 1, offset = 0 } = params;
+  async select(params: IQueryParams) {
+    const { table, column: columns, where, order: orders, limit = 1, offset = 0 } = params;
     let sql: string,
       columnStr: string,
-      where: string,
+      whereStr: string,
       optionValues: unknown[] = [],
       order: string,
       limitStr: string;
@@ -40,59 +28,64 @@ class MySQLClient {
     if (typeof orders === undefined || !orders?.length) {
       order = '';
     } else {
-      order = orders.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, 'ORDER BY').replace(/,$/, '');
+      order = orders.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, ' ORDER BY').replace(/,$/, '');
     }
     // limit
-    limitStr = `LIMIT ${offset}, ${limit}`;
+    limitStr = ` LIMIT ${offset}, ${limit}`;
     // where
-    if (typeof options === undefined || !options?.length) {
-      where = '';
+    if (typeof where === undefined || !where?.length) {
+      whereStr = '';
     } else {
-      where = 'WHRER ';
-      for (let i = 0; i < options.length; i++) {
-        if (!(options[i] instanceof Array) || !options[i].length) {
+      whereStr = ' WHERE ';
+      for (let i = 0; i < where.length; i++) {
+        if (!(where[i] instanceof Array) || !where[i].length) {
           throw OptionError('every option should be a non-empty array!');
         }
-        const item = options[i];
+        const item = where[i];
         switch (item[0]) {
-          case EOperator.eq:
-          case EOperator.gt:
-          case EOperator.lt:
-          case EOperator.ge:
-          case EOperator.le:
-          case EOperator.ne:
-          case EOperator.like:
+          case Operator.eq:
+          case Operator.gt:
+          case Operator.lt:
+          case Operator.ge:
+          case Operator.le:
+          case Operator.ne:
+          case Operator.like:
             const [_str, _values] = commonOpFunc(item);
-            where += _str;
+            whereStr += _str;
             optionValues.push(..._values);
             break;
-          case EOperator.bw:
+          case Operator.bw:
             const [_strBw, _valuesBw] = bwOpFunc(item);
-            where += _strBw;
+            whereStr += _strBw;
             optionValues.push(..._valuesBw);
             break;
-          case EOperator.in:
-          case EOperator.ni:
+          case Operator.in:
+          case Operator.ni:
             const [_strI, _valuesI] = inAndNiOpFunc(item);
-            where += _strI;
+            whereStr += _strI;
             optionValues.push(..._valuesI);
             break;
-          case EOperator.or:
+          case Operator.or:
             const [_strOr, _valuesOr] = orOpFunc(item as TOrOption);
-            where += _strI;
+            whereStr += _strI;
             optionValues.push(..._valuesI);
             break;
           default:
             throw OperatorError(`${item[0]} is not a valid operator!`);
         }
-        i !== options.length - 1 && (where += ' AND ');
+        i !== where.length - 1 && (whereStr += ' AND ');
       }
     }
     // prepared statement
-    sql = `SELECT ${columnStr} FROM ${table} ${where} ${order} ${limitStr}`;
-    console.log(sql);
-    console.log(optionValues);
-    return this._query(sql, optionValues);
+    sql = `SELECT ${columnStr} FROM ${table}${whereStr}${order}${limitStr}`;
+    // console.log(sql);
+    // console.log(optionValues);
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return rows;
+  }
+
+  async count(params: IQueryParams) {
+    return await this.select();
   }
 }
 
