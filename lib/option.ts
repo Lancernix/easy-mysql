@@ -1,47 +1,39 @@
 import { isInteger } from 'lodash';
-import { commonOpFunc } from './oprator1';
-import {
-  OptionError,
-  Columns,
-  TOrder,
-  Option,
-  SingleOperator,
-  MultiOperator,
-  OrOperator,
-  OperatorError,
-  ORDER,
-  LIMIT,
-  WHRER,
-} from './typing';
+import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc } from './oprator1';
+import { Order, Option, SingleOperator, MultiOperator, OrOperator, ORDER, LIMIT, WHRER, AND } from './typing';
 
-const getColumns = (columns: Columns) =>
-  typeof columns === undefined || !columns?.length ? ' *' : ' ' + columns.join(', ');
+export const getColumns = (columns: string[] | undefined) => (!columns?.length ? '*' : columns.join(', '));
 
-const getOrder = (order: TOrder) => {
-  if (typeof order === undefined || !order?.length) {
+export const getOrder = (orders: Order[] | undefined) => {
+  if (!orders?.length) {
     return '';
   } else {
-    return order.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, ` ${ORDER}`).replace(/,$/, '');
+    return orders
+      .reduce((res: string, item: Order) => res + ` ${item[0]} ${item[1].toUpperCase()},`, ` ${ORDER}`)
+      .replace(/,$/, '');
   }
 };
 
-const getLimit = (offset: number, limit: number) => {
+export const getLimit = (offset: number, limit: number) => {
   const offsetTag = offset >= 0 && isInteger(offset);
   const limitTag = limit >= 0 && isInteger(limit);
   if (offsetTag && limitTag) {
-    return ` ${LIMIT} ${offset}, ${limit}`;
+    return ` ${LIMIT} ${offset}, ${limit};`;
   } else {
-    throw OptionError(`'${LIMIT}' need two positive integer params!`);
+    throw new Error(`'${LIMIT}' need two positive integer params!`);
   }
 };
 
-const getWhere = (where: Option) => {
-  if (typeof where === undefined || !Object.keys(where).length) {
-    return '';
+export const getWhere = (where: Option | undefined) => {
+  let result: string;
+  const optionVals: (string | number)[] = [];
+  if (where === void 0 || !Object.keys(where!).length) {
+    result = '';
   } else {
-    let result = ` ${WHRER} `;
-    const optionVals: (string | number)[] = [];
-    for (const key of Object.keys(where)) {
+    result = ` ${WHRER} `;
+    const keyArr = Object.keys(where!);
+    for (let i = 0; i < keyArr.length; i++) {
+      const key = keyArr[i];
       switch (key) {
         case SingleOperator.eq:
         case SingleOperator.ge:
@@ -50,65 +42,34 @@ const getWhere = (where: Option) => {
         case SingleOperator.lt:
         case SingleOperator.ne:
         case SingleOperator.like:
-          const [_str, _values] = commonOpFunc(key, where[key]);
+          const [_str, _values] = commonOpFunc(key, where![key]);
           result += _str;
           optionVals.push(..._values);
           break;
         case MultiOperator.bw:
+          const [_strBw, _valuesBw] = bwOpFunc(key, where![key]);
+          result += _strBw;
+          optionVals.push(..._valuesBw);
           break;
         case MultiOperator.in:
         case MultiOperator.ni:
+          const [_strI, _valuesI] = inAndNiOpFunc(key, where![key]);
+          result += _strI;
+          optionVals.push(..._valuesI);
           break;
         case OrOperator.or:
+          const [_strOr, _valuesOr] = orOpFunc(where![key]);
+          result += _strOr;
+          optionVals.push(..._valuesOr);
           break;
         default:
-          throw OperatorError(`${key} is not a valid operator!`);
+          throw new Error(`${key} is not a valid operator!`);
       }
-    }
-    for (let i = 0; i < where.length; i++) {
-      if (!(where[i] instanceof Array) || !where[i].length) {
-        throw OptionError('every option should be a non-empty array!');
-      }
-      const item = where[i];
-      switch (item[0]) {
-        case Operator.eq:
-        case Operator.gt:
-        case Operator.lt:
-        case Operator.ge:
-        case Operator.le:
-        case Operator.ne:
-        case Operator.like:
-          const [_str, _values] = commonOpFunc(item);
-          result += _str;
-          optionValues.push(..._values);
-          break;
-        case Operator.bw:
-          const [_strBw, _valuesBw] = bwOpFunc(item);
-          result += _strBw;
-          optionValues.push(..._valuesBw);
-          break;
-        case Operator.in:
-        case Operator.ni:
-          const [_strI, _valuesI] = inAndNiOpFunc(item);
-          result += _strI;
-          optionValues.push(..._valuesI);
-          break;
-        case Operator.or:
-          const [_strOr, _valuesOr] = orOpFunc(item as TOrOption);
-          result += _strI;
-          optionValues.push(..._valuesI);
-          break;
-        default:
-          throw OperatorError(`${item[0]} is not a valid operator!`);
-      }
-      i !== where.length - 1 && (result += ' AND ');
+      i !== keyArr.length - 1 && (result += ` ${AND} `);
     }
   }
-};
-
-export default {
-  getColumns,
-  getOrder,
-  getLimit,
-  getWhere,
+  return {
+    str: result,
+    arr: optionVals,
+  };
 };

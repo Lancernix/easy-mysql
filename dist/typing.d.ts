@@ -1,37 +1,48 @@
-import { OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2';
 /**
- * error define
+ * constant define
  */
-export interface IOptionError extends Error {
-}
-export interface IOptionErrorConstructor extends ErrorConstructor {
-    new (message?: string): IOptionError;
-    (message?: string): IOptionError;
-    readonly prototype: IOptionError;
-}
-export declare let OptionError: IOptionErrorConstructor;
-export interface IOperatorError extends Error {
-}
-export interface IOperatorErrorConstructor extends ErrorConstructor {
-    new (message?: string): IOperatorError;
-    (message?: string): IOperatorError;
-    readonly prototype: IOperatorError;
-}
-export declare let OperatorError: IOperatorErrorConstructor;
-export interface IColumnValueError extends Error {
-}
-export interface IColumnValueErrorConstructor extends ErrorConstructor {
-    new (message?: string): IColumnValueError;
-    (message?: string): IColumnValueError;
-    readonly prototype: IColumnValueError;
-}
-export declare let ColumnValueError: IColumnValueErrorConstructor;
+export declare const SELECT = "SELECT";
+export declare const FROM = "FROM";
+export declare const INSERT = "INSERT";
+export declare const AND = "AND";
+export declare const OR = "OR";
+export declare const WHRER = "WHERE";
+export declare const ORDER = "ORDER BY";
+export declare const LIMIT = "LIMIT";
+export declare const PLACEHOLDER = "?";
 /**
  * type define
  */
-export declare const AND = "AND";
-export declare const PLACEHOLDER = "?";
-export declare enum EOperator {
+export declare enum SingleOperator {
+    eq = "eq",
+    ne = "ne",
+    gt = "gt",
+    lt = "lt",
+    ge = "ge",
+    le = "le",
+    like = "like"
+}
+export interface SingleOptionValue {
+    column: string;
+    value: string | number;
+}
+declare type SingleOption = Record<SingleOperator, SingleOptionValue | SingleOptionValue[]>;
+export declare enum MultiOperator {
+    bw = "bw",
+    in = "in",
+    ni = "ni"
+}
+export interface MultiOptionValue {
+    column: string;
+    value: (string | number)[];
+}
+declare type MultiOption = Record<MultiOperator, MultiOptionValue | MultiOptionValue[]>;
+export declare enum OrOperator {
+    or = "or"
+}
+export declare type OrOptionValue = Record<SingleOperator, SingleOptionValue> | Record<MultiOperator, MultiOptionValue>;
+declare type OrOption = Record<OrOperator, Partial<OrOptionValue>[]>;
+export declare enum Operator {
     eq = "=",
     ne = "!=",
     gt = ">",
@@ -44,17 +55,17 @@ export declare enum EOperator {
     ni = "NOT IN",
     or = "OR"
 }
-export declare type TColumns = string[];
-export declare type TOption = [EOperator, string | string[], unknown];
-export declare type TOrOption = [EOperator.or, ...TOption[]];
-export declare type TOrder = [string, 'desc' | 'asc'];
-export declare type TOpFuncRet = [string, unknown[]];
+export declare type Option = SingleOption & MultiOption & OrOption;
+export declare type TOption = [Operator, string | string[], unknown];
+export declare type TOrOption = [Operator.or, ...TOption[]];
+export declare type Order = [string, 'desc' | 'asc'];
+export declare type OpFuncRet = [string, (string | number)[]];
 export interface IQueryParams {
     table: string;
-    columns?: TColumns[];
-    options?: (TOption | TOrOption)[];
-    orders?: TOrder[];
+    column?: string[];
+    where?: Option;
+    order?: Order[];
     limit?: number;
     offset?: number;
 }
-export declare type ResultRow = RowDataPacket[][] | RowDataPacket[] | OkPacket | OkPacket[] | ResultSetHeader;
+export {};

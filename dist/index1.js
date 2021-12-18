@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var mysql2_1 = require("mysql2");
 var typing_1 = require("./typing");
-var oprator1_1 = require("./oprator1");
+var option_1 = require("./option");
 var MySQLClient = /** @class */ (function () {
     function MySQLClient(config) {
         this.pool = (0, mysql2_1.createPool)(config);
@@ -51,87 +51,33 @@ var MySQLClient = /** @class */ (function () {
             });
         });
     };
-    // getConnection() {
-    //   const onErr = (err: NodeJS.ErrnoException) => {
-    //     err.name = 'MySQLConnectionError';
-    //     throw err;
-    //   };
-    //   const onConnection = params => {
-    //     return;
-    //   };
-    //   return this.pool.getConnection();
-    // }
     MySQLClient.prototype.select = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var table, columns, options, orders, _a, limit, _b, offset, sql, columnStr, where, optionValues, order, limitStr, i, item, _c, _str, _values, _d, _strBw, _valuesBw, _e, _strI, _valuesI, _f, _strOr, _valuesOr, _g, rows, fields;
-            return __generator(this, function (_h) {
-                switch (_h.label) {
+            var table, column, where, order, _a, limit, _b, offset, sql, columnStr, whereStr, optionValues, orderStr, limitStr, _c, rows, _fields;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
-                        table = params.table, columns = params.columns, options = params.options, orders = params.orders, _a = params.limit, limit = _a === void 0 ? 1 : _a, _b = params.offset, offset = _b === void 0 ? 0 : _b;
-                        optionValues = [];
+                        table = params.table, column = params.column, where = params.where, order = params.order, _a = params.limit, limit = _a === void 0 ? 1 : _a, _b = params.offset, offset = _b === void 0 ? 0 : _b;
+                        if (table === void 0) {
+                            throw Error('table params is required!');
+                        }
                         // columns
-                        columnStr = typeof columns === undefined || !(columns === null || columns === void 0 ? void 0 : columns.length) ? '*' : columns.join(', ');
+                        columnStr = (0, option_1.getColumns)(column);
                         // order
-                        if (typeof orders === undefined || !(orders === null || orders === void 0 ? void 0 : orders.length)) {
-                            order = '';
-                        }
-                        else {
-                            order = orders.reduce(function (item) { return " ".concat(item[0], " ").concat(item[1].toUpperCase, ","); }, ' ORDER BY').replace(/,$/, '');
-                        }
+                        orderStr = (0, option_1.getOrder)(order);
                         // limit
-                        limitStr = " LIMIT ".concat(offset, ", ").concat(limit);
+                        limitStr = (0, option_1.getLimit)(offset, limit);
                         // where
-                        if (typeof options === undefined || !(options === null || options === void 0 ? void 0 : options.length)) {
-                            where = '';
-                        }
-                        else {
-                            where = ' WHERE ';
-                            for (i = 0; i < options.length; i++) {
-                                if (!(options[i] instanceof Array) || !options[i].length) {
-                                    throw (0, typing_1.OptionError)('every option should be a non-empty array!');
-                                }
-                                item = options[i];
-                                switch (item[0]) {
-                                    case typing_1.EOperator.eq:
-                                    case typing_1.EOperator.gt:
-                                    case typing_1.EOperator.lt:
-                                    case typing_1.EOperator.ge:
-                                    case typing_1.EOperator.le:
-                                    case typing_1.EOperator.ne:
-                                    case typing_1.EOperator.like:
-                                        _c = (0, oprator1_1.commonOpFunc)(item), _str = _c[0], _values = _c[1];
-                                        where += _str;
-                                        optionValues.push.apply(optionValues, _values);
-                                        break;
-                                    case typing_1.EOperator.bw:
-                                        _d = (0, oprator1_1.bwOpFunc)(item), _strBw = _d[0], _valuesBw = _d[1];
-                                        where += _strBw;
-                                        optionValues.push.apply(optionValues, _valuesBw);
-                                        break;
-                                    case typing_1.EOperator.in:
-                                    case typing_1.EOperator.ni:
-                                        _e = (0, oprator1_1.inAndNiOpFunc)(item), _strI = _e[0], _valuesI = _e[1];
-                                        where += _strI;
-                                        optionValues.push.apply(optionValues, _valuesI);
-                                        break;
-                                    case typing_1.EOperator.or:
-                                        _f = (0, oprator1_1.orOpFunc)(item), _strOr = _f[0], _valuesOr = _f[1];
-                                        where += _strI;
-                                        optionValues.push.apply(optionValues, _valuesI);
-                                        break;
-                                    default:
-                                        throw (0, typing_1.OperatorError)("".concat(item[0], " is not a valid operator!"));
-                                }
-                                i !== options.length - 1 && (where += ' AND ');
-                            }
-                        }
+                        whereStr = (0, option_1.getWhere)(where).str;
+                        // optionValues
+                        optionValues = (0, option_1.getWhere)(where).arr;
                         // prepared statement
-                        sql = "SELECT ".concat(columnStr, " FROM ").concat(table).concat(where).concat(order).concat(limitStr);
+                        sql = "".concat(typing_1.SELECT, " ").concat(columnStr, " ").concat(typing_1.FROM, " ").concat(table).concat(whereStr).concat(orderStr).concat(limitStr);
                         console.log(sql);
                         console.log(optionValues);
                         return [4 /*yield*/, this._query(sql, optionValues)];
                     case 1:
-                        _g = _h.sent(), rows = _g[0], fields = _g[1];
+                        _c = _d.sent(), rows = _c[0], _fields = _c[1];
                         return [2 /*return*/, rows];
                 }
             });

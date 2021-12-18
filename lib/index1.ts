@@ -1,6 +1,6 @@
-import { createPool, createConnection, ConnectionOptions, Pool, FieldPacket } from 'mysql2';
-import { Operator, IQueryParams, OperatorError, OptionError, TOrOption } from './typing';
-import { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc } from './oprator1';
+import { createPool, createConnection, ConnectionOptions, Pool } from 'mysql2';
+import { IQueryParams, SELECT, FROM } from './typing';
+import { getColumns, getOrder, getLimit, getWhere } from './option';
 
 class MySQLClient {
   pool: Pool;
@@ -15,78 +15,37 @@ class MySQLClient {
   }
 
   async select(params: IQueryParams) {
-    const { table, column: columns, where, order: orders, limit = 1, offset = 0 } = params;
+    const { table, column, where, order, limit = 1, offset = 0 } = params;
+    if (table === void 0) {
+      throw Error('table params is required!');
+    }
     let sql: string,
       columnStr: string,
       whereStr: string,
-      optionValues: unknown[] = [],
-      order: string,
+      optionValues: (string | number)[],
+      orderStr: string,
       limitStr: string;
     // columns
-    columnStr = typeof columns === undefined || !columns?.length ? '*' : columns.join(', ');
+    columnStr = getColumns(column);
     // order
-    if (typeof orders === undefined || !orders?.length) {
-      order = '';
-    } else {
-      order = orders.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, ' ORDER BY').replace(/,$/, '');
-    }
+    orderStr = getOrder(order);
     // limit
-    limitStr = ` LIMIT ${offset}, ${limit}`;
+    limitStr = getLimit(offset, limit);
     // where
-    if (typeof where === undefined || !where?.length) {
-      whereStr = '';
-    } else {
-      whereStr = ' WHERE ';
-      for (let i = 0; i < where.length; i++) {
-        if (!(where[i] instanceof Array) || !where[i].length) {
-          throw OptionError('every option should be a non-empty array!');
-        }
-        const item = where[i];
-        switch (item[0]) {
-          case Operator.eq:
-          case Operator.gt:
-          case Operator.lt:
-          case Operator.ge:
-          case Operator.le:
-          case Operator.ne:
-          case Operator.like:
-            const [_str, _values] = commonOpFunc(item);
-            whereStr += _str;
-            optionValues.push(..._values);
-            break;
-          case Operator.bw:
-            const [_strBw, _valuesBw] = bwOpFunc(item);
-            whereStr += _strBw;
-            optionValues.push(..._valuesBw);
-            break;
-          case Operator.in:
-          case Operator.ni:
-            const [_strI, _valuesI] = inAndNiOpFunc(item);
-            whereStr += _strI;
-            optionValues.push(..._valuesI);
-            break;
-          case Operator.or:
-            const [_strOr, _valuesOr] = orOpFunc(item as TOrOption);
-            whereStr += _strI;
-            optionValues.push(..._valuesI);
-            break;
-          default:
-            throw OperatorError(`${item[0]} is not a valid operator!`);
-        }
-        i !== where.length - 1 && (whereStr += ' AND ');
-      }
-    }
+    whereStr = getWhere(where).str;
+    // optionValues
+    optionValues = getWhere(where).arr;
     // prepared statement
-    sql = `SELECT ${columnStr} FROM ${table}${whereStr}${order}${limitStr}`;
-    // console.log(sql);
-    // console.log(optionValues);
+    sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr}`;
+    console.log(sql);
+    console.log(optionValues);
     const [rows, _fields] = await this._query(sql, optionValues);
     return rows;
   }
 
-  async count(params: IQueryParams) {
-    return await this.select();
-  }
+  // async count(params: IQueryParams) {
+  //   return await this.select();
+  // }
 }
 
 export default MySQLClient;

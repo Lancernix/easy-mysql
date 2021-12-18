@@ -1,37 +1,5 @@
 /**
- * error define
- */
-export interface IOptionError extends Error {}
-
-export interface OptionErrorConstructor extends ErrorConstructor {
-  new (message?: string): IOptionError;
-  (message?: string): IOptionError;
-  readonly prototype: IOptionError;
-}
-
-export let OptionError: OptionErrorConstructor;
-
-export interface IOperatorError extends Error {}
-
-export interface OperatorErrorConstructor extends ErrorConstructor {
-  new (message?: string): IOperatorError;
-  (message?: string): IOperatorError;
-  readonly prototype: IOperatorError;
-}
-
-export let OperatorError: OperatorErrorConstructor;
-
-export interface ColumnValueError extends Error {}
-
-export interface ColumnValueErrorConstructor extends ErrorConstructor {
-  new (message?: string): ColumnValueError;
-  (message?: string): ColumnValueError;
-  readonly prototype: ColumnValueError;
-}
-
-export let ColumnValueError: ColumnValueErrorConstructor;
-/**
- * type define
+ * constant define
  */
 export const SELECT = 'SELECT';
 
@@ -51,6 +19,9 @@ export const LIMIT = 'LIMIT';
 
 export const PLACEHOLDER = '?';
 
+/**
+ * type define
+ */
 export enum SingleOperator {
   eq = 'eq',
   ne = 'ne',
@@ -85,16 +56,19 @@ export enum OrOperator {
   or = 'or',
 }
 
-export type OrOptionValue = Record<SingleOperator, SingleOptionValue> & Record<MultiOperator, MultiOptionValue>;
+export type OrOptionValue = Record<SingleOperator, SingleOptionValue> | Record<MultiOperator, MultiOptionValue>;
+// | Record<SingleOperator.eq, SingleOptionValue>
+// | Record<SingleOperator.ne, SingleOptionValue>
+// | Record<SingleOperator.ge, SingleOptionValue>
+// | Record<SingleOperator.gt, SingleOptionValue>
+// | Record<SingleOperator.le, SingleOptionValue>
+// | Record<SingleOperator.lt, SingleOptionValue>
+// | Record<SingleOperator.like, SingleOptionValue>
+// | Record<MultiOperator.bw, MultiOptionValue>
+// | Record<MultiOperator.in, MultiOptionValue>
+// | Record<MultiOperator.ni, MultiOptionValue>;
 
-type OrOption = Record<OrOperator, Partial<OrOptionValue>>;
-
-const a: OrOption = {
-  or: {
-    eq: { column: 'l', value: '1' },
-    bw: { column: 'm', value: [1, 2] },
-  },
-};
+type OrOption = Record<OrOperator, Partial<OrOptionValue>[]>;
 
 export enum Operator {
   eq = '=',
@@ -112,22 +86,19 @@ export enum Operator {
 
 export type Option = SingleOption & MultiOption & OrOption;
 
-export type Columns = string[];
-
 export type TOption = [Operator, string | string[], unknown];
 
 export type TOrOption = [Operator.or, ...TOption[]];
 
-export type TOrder = [string, 'desc' | 'asc'];
+export type Order = [string, 'desc' | 'asc'];
 
 export type OpFuncRet = [string, (string | number)[]];
 
 export interface IQueryParams {
   table: string;
-  column?: Columns[];
-  // where?: (TOption | TOrOption)[];
+  column?: string[];
   where?: Option;
-  order?: TOrder[];
+  order?: Order[];
   limit?: number;
   offset?: number;
 }
