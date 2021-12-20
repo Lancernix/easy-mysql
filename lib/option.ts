@@ -1,15 +1,15 @@
 import { isInteger } from 'lodash';
-import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc } from './oprator1';
+import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc } from './operator';
 import { Order, Option, SingleOperator, MultiOperator, OrOperator, ORDER, LIMIT, WHRER, AND } from './typing';
 
 export const getColumns = (columns: string[] | undefined) => (!columns?.length ? '*' : columns.join(', '));
 
-export const getOrder = (orders: Order[] | undefined) => {
-  if (!orders?.length) {
+export const getOrder = (order: Order | undefined) => {
+  if (order === void 0 || !Object.keys(order).length) {
     return '';
   } else {
-    return orders
-      .reduce((res: string, item: Order) => res + ` ${item[0]} ${item[1].toUpperCase()},`, ` ${ORDER}`)
+    return Object.keys(order)
+      .reduce((res: string, item: string) => res + ` ${item} ${order[item].toUpperCase()},`, ` ${ORDER}`)
       .replace(/,$/, '');
   }
 };

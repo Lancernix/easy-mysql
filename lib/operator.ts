@@ -1,87 +1,154 @@
+import {
+  OpFuncRet,
+  Operator,
+  SingleOptionValue,
+  SingleOperator,
+  MultiOptionValue,
+  MultiOperator,
+  OrOptionValue,
+  PLACEHOLDER,
+  AND,
+  OR,
+} from './typing';
+import { isPlainObject } from 'lodash';
+
+const checkPlainObject = (key: string, value: unknown): void => {
+  if (!isPlainObject(value)) {
+    throw new Error(`${key}'s value should be a plain object!`);
+  }
+};
+
+const checkEmptyArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || !value.length) {
+    throw new Error(`${key}'s value should be a non-empty array!`);
+  }
+};
+
+const checkTwoElementArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || value.length === 2) {
+    throw new Error(`${key}'s value should be an array with 2 elements!`);
+  }
+};
+
+const checkMoreElementArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || value.length < 2) {
+    throw new Error(`${key}'s value should be an array with 2 elements or more!`);
+  }
+};
+
 // eq|gt|lt|ge|le|ne|like
-const commonOpFunc = (params: TOption): TOpFuncRet => {
-  if (!(params instanceof Array) || params.length !== 3) {
-    throw OptionError(`common option is an array with 3 elements!`);
+const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => {
+  checkPlainObject(op, val);
+  let optionStr: string = '';
+  const values: (string | number | Date)[] = [];
+  const keyArr = Object.keys(val);
+  if (keyArr.length) {
+    for (let i = 0; i < keyArr.length; i++) {
+      const key = keyArr[i];
+      optionStr +=
+        i === keyArr.length - 1
+          ? `${key} ${Operator[op]} ${PLACEHOLDER}`
+          : `${key} ${Operator[op]} ${PLACEHOLDER} ${AND} `;
+      values.push(val[key]);
+    }
   }
-  if (params[2] instanceof Array) {
-    throw ColumnValueError(`${params[0]} operator's column value is not a array!`);
-  }
-  const optionStr = `${String(params[1])} ${params[0]} ${PLACEHOLDER}`;
-  return [optionStr, [params[2]]];
+  return [optionStr, values];
 };
 
 // bw
-const bwOpFunc = (params: TOption): TOpFuncRet => {
-  if (!(params instanceof Array) || params.length !== 3) {
-    throw OptionError(`BETWEEN option is an array with 3 elements!`);
+const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
+  checkPlainObject(op, val);
+  let optionStr: string = '';
+  const values: (string | number | Date)[] = [];
+  const keyArr = Object.keys(val);
+  if (keyArr.length) {
+    for (let i = 0; i < keyArr.length; i++) {
+      const key = keyArr[i];
+      checkTwoElementArray(key, val[key]);
+      optionStr +=
+        i === keyArr.length - 1
+          ? `${key} ${Operator[op]} ${PLACEHOLDER} ${AND} ${PLACEHOLDER}`
+          : `${key} ${Operator[op]} ${PLACEHOLDER} ${AND} ${PLACEHOLDER} ${AND} `;
+      values.push(...val[key]);
+    }
   }
-  if (!(params[2] instanceof Array) || params[2].length !== 2) {
-    throw ColumnValueError(`${params[0]} operator's column value should be a array with 2 element!`);
-  }
-  const optionStr = `${String(params[1])} ${params[0]} ${PLACEHOLDER} ${AND} ${PLACEHOLDER}`;
-  return [optionStr, [...params[2]]];
+  return [optionStr, values];
 };
 
-// in|ni
-const inAndNiOpFunc = (params: TOption): TOpFuncRet => {
-  if (!(params instanceof Array) || params.length !== 3) {
-    throw OptionError(`IN or NOT IN option is an array with 3 elements!`);
+// in/ni
+const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
+  // 占位符组装
+  const compose = (params: string[] | number[] | Date[]): string => {
+    let res: string = '';
+    for (let i = 0; i < params.length; i++) {
+      res += `${PLACEHOLDER}, `;
+    }
+    return res.replace(/,\s$/, '');
+  };
+
+  checkPlainObject(op, val);
+  let optionStr: string = '';
+  const values: (string | number | Date)[] = [];
+  const keyArr = Object.keys(val);
+  if (keyArr.length) {
+    for (let i = 0; i < keyArr.length; i++) {
+      const key = keyArr[i];
+      checkEmptyArray(key, val[key]);
+      optionStr +=
+        i === keyArr.length - 1
+          ? `${key} ${Operator[op]} (${compose(val[key])})`
+          : `${key} ${Operator[op]} (${compose(val[key])}) ${AND} `;
+      values.push(...val[key]);
+    }
   }
-  if (!(params[2] instanceof Array) || params[2].length === 0) {
-    throw ColumnValueError(`${params[0]} operator's column value need a non-empty array!`);
-  }
-  let optionStr: string = `${String(params[1])} ${params[0]} (`;
-  for (let _index = 0; _index < params[2].length; _index++) {
-    optionStr += _index !== params[2].length - 1 ? `${PLACEHOLDER}, ` : `${PLACEHOLDER})`;
-  }
-  // optionStr = optionStr.replace(/,\s$/, '') + ')';
-  return [optionStr, [...params[2]]];
+  return [optionStr, values];
 };
 
 // or
-const orOpFunc = (params: TOrOption): TOpFuncRet => {
-  if (!(params instanceof Array) || params.length < 3) {
-    throw OptionError(`OR option is an array with least 3 elements!`);
-  }
+const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
+  checkMoreElementArray('or', val);
   let optionStr: string = '(';
-  let optionValues: unknown[] = [];
-  for (let _index = 1; _index < params.length; _index++) {
-    const element = params[_index];
-    if (!(element instanceof Array)) {
-      throw OptionError(`OR option rest elements should be a TOption array!`);
+  const values: (string | number | Date)[] = [];
+  for (let i = 0; i < val.length; i++) {
+    const keyArr = Object.keys(val[i]);
+    for (let j = 0; j < keyArr.length; j++) {
+      const key = keyArr[j];
+      switch (key) {
+        case SingleOperator.eq:
+        case SingleOperator.ge:
+        case SingleOperator.gt:
+        case SingleOperator.le:
+        case SingleOperator.lt:
+        case SingleOperator.ne:
+        case SingleOperator.like:
+          const valueCommon = (val[i] as Record<SingleOperator, SingleOptionValue>)[key];
+          const [_str1, _values1] = commonOpFunc(key, valueCommon);
+          optionStr += _str1;
+          values.push(..._values1);
+          break;
+        case MultiOperator.bw:
+          const valueBw = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
+          const [_str2, _values2] = bwOpFunc(key, valueBw);
+          optionStr += _str2;
+          values.push(..._values2);
+          break;
+        case MultiOperator.in:
+        case MultiOperator.ni:
+          const valueI = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
+          const [_str3, _values3] = bwOpFunc(key, valueI);
+          optionStr += _str3;
+          values.push(..._values3);
+          break;
+        default:
+          throw new Error(`${key} is not a valid operator in or option!`);
+      }
+      j !== keyArr.length - 1 && (optionStr += ` ${AND} `);
     }
-    switch (element[0]) {
-      case EOperator.eq:
-      case EOperator.gt:
-      case EOperator.lt:
-      case EOperator.ge:
-      case EOperator.le:
-      case EOperator.ne:
-      case EOperator.like:
-        const [_str1, _values1] = commonOpFunc(element);
-        optionStr += _str1;
-        optionValues.push(..._values1);
-        break;
-      case EOperator.bw:
-        const [_str2, _values2] = bwOpFunc(element);
-        optionStr += _str2;
-        optionValues.push(..._values2);
-        break;
-      case EOperator.in:
-      case EOperator.ni:
-        const [_str3, _values3] = inAndNiOpFunc(element);
-        optionStr += _str3;
-        optionValues.push(..._values3);
-        break;
-      case EOperator.or:
-        throw OperatorError(`nested OR is not allowed!`);
-      default:
-        throw OperatorError(`${element[0]} is not a valid operator!`);
-    }
-    optionStr += _index !== params[2].length - 1 ? ' or ' : ')';
+    optionStr += i === val.length - 1 ? ')' : ` ${OR} `;
   }
-  // optionStr = optionStr.replace(/\sor\s$/, '') + ')';
-  return [optionStr, optionValues];
+  // console.log(optionStr);
+  // console.log(values);
+  return [optionStr, values];
 };
 
 export { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc };

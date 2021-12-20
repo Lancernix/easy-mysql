@@ -1,5 +1,6 @@
-import { createPool, createConnection, ConnectionOptions, Pool, Query } from 'mysql2';
-import { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc } from './operator';
+import { createPool, createConnection, ConnectionOptions, Pool } from 'mysql2';
+import { IQueryParams, SELECT, FROM } from './typing';
+import { getColumns, getOrder, getLimit, getWhere } from './option';
 
 class MySQLClient {
   pool: Pool;
@@ -9,90 +10,42 @@ class MySQLClient {
   }
 
   // 内部调用查询函数
-  async _query(sql: string, values: any | any[] | { [param: string]: any }): Promise<Query> {
-    return this.pool.execute(sql, values);
+  async _query(sql: string, values: any | any[] | { [param: string]: any }) {
+    return this.pool.promise().execute(sql, values);
   }
 
-  // getConnection() {
-  //   const onErr = (err: NodeJS.ErrnoException) => {
-  //     err.name = 'MySQLConnectionError';
-  //     throw err;
-  //   };
-
-  //   const onConnection = params => {
-  //     return;
-  //   };
-  //   return this.pool.getConnection();
-  // }
-
-  async select(params: IQueryParams): Promise<Query> {
-    const { table, columns, options, orders, limit = 1, offset = 0 } = params;
+  async select(params: IQueryParams) {
+    const { table, column, where, order, limit = 1, offset = 0 } = params;
+    if (table === void 0) {
+      throw Error('table params is required!');
+    }
     let sql: string,
       columnStr: string,
-      where: string,
-      optionValues: unknown[] = [],
-      order: string,
+      whereStr: string,
+      optionValues: (string | number)[],
+      orderStr: string,
       limitStr: string;
-    // columns
-    columnStr = typeof columns === undefined || !columns?.length ? '*' : columns.join(', ');
+    // column
+    columnStr = getColumns(column);
     // order
-    if (typeof orders === undefined || !orders?.length) {
-      order = '';
-    } else {
-      order = orders.reduce(item => ` ${item[0]} ${item[1].toUpperCase},`, 'ORDER BY').replace(/,$/, '');
-    }
+    orderStr = getOrder(order);
     // limit
-    limitStr = `LIMIT ${offset}, ${limit}`;
+    limitStr = getLimit(offset, limit);
     // where
-    if (typeof options === undefined || !options?.length) {
-      where = '';
-    } else {
-      where = 'WHERE ';
-      for (let i = 0; i < options.length; i++) {
-        if (!(options[i] instanceof Array) || !options[i].length) {
-          throw OptionError('every option should be a non-empty array!');
-        }
-        const item = options[i];
-        switch (item[0]) {
-          case EOperator.eq:
-          case EOperator.gt:
-          case EOperator.lt:
-          case EOperator.ge:
-          case EOperator.le:
-          case EOperator.ne:
-          case EOperator.like:
-            const [_str, _values] = commonOpFunc(item);
-            where += _str;
-            optionValues.push(..._values);
-            break;
-          case EOperator.bw:
-            const [_strBw, _valuesBw] = bwOpFunc(item);
-            where += _strBw;
-            optionValues.push(..._valuesBw);
-            break;
-          case EOperator.in:
-          case EOperator.ni:
-            const [_strI, _valuesI] = inAndNiOpFunc(item);
-            where += _strI;
-            optionValues.push(..._valuesI);
-            break;
-          case EOperator.or:
-            const [_strOr, _valuesOr] = orOpFunc(item as TOrOption);
-            where += _strI;
-            optionValues.push(..._valuesI);
-            break;
-          default:
-            throw OperatorError(`${item[0]} is not a valid operator!`);
-        }
-        i !== options.length - 1 && (where += ' AND ');
-      }
-    }
+    whereStr = getWhere(where).str;
+    // optionValues
+    optionValues = getWhere(where).arr;
     // prepared statement
-    sql = `SELECT ${columnStr} FROM ${table} ${where} ${order} ${limitStr}`;
+    sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr}`;
     console.log(sql);
     console.log(optionValues);
-    return this._query(sql, optionValues);
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return rows;
   }
+
+  // async count(params: IQueryParams) {
+  //   return await this.select();
+  // }
 }
 
 export default MySQLClient;

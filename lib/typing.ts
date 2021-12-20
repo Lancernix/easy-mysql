@@ -22,6 +22,8 @@ export const PLACEHOLDER = '?';
 /**
  * type define
  */
+
+// 单值操作符
 export enum SingleOperator {
   eq = 'eq',
   ne = 'ne',
@@ -31,42 +33,27 @@ export enum SingleOperator {
   le = 'le',
   like = 'like',
 }
-
 export interface SingleOptionValue {
-  column: string;
-  value: string | number;
+  [key: string]: string | number | Date;
 }
+type SingleOption = Record<SingleOperator, SingleOptionValue>;
 
-type SingleOption = Record<SingleOperator, SingleOptionValue | SingleOptionValue[]>;
-
+// 双（多）值操作符
 export enum MultiOperator {
   bw = 'bw',
   in = 'in',
   ni = 'ni',
 }
-
 export interface MultiOptionValue {
-  column: string;
-  value: (string | number)[];
+  [key: string]: string[] | number[] | Date[];
 }
+type MultiOption = Record<MultiOperator, MultiOptionValue>;
 
-type MultiOption = Record<MultiOperator, MultiOptionValue | MultiOptionValue[]>;
-
+// OR操作符
 export enum OrOperator {
   or = 'or',
 }
-
 export type OrOptionValue = Record<SingleOperator, SingleOptionValue> | Record<MultiOperator, MultiOptionValue>;
-// | Record<SingleOperator.eq, SingleOptionValue>
-// | Record<SingleOperator.ne, SingleOptionValue>
-// | Record<SingleOperator.ge, SingleOptionValue>
-// | Record<SingleOperator.gt, SingleOptionValue>
-// | Record<SingleOperator.le, SingleOptionValue>
-// | Record<SingleOperator.lt, SingleOptionValue>
-// | Record<SingleOperator.like, SingleOptionValue>
-// | Record<MultiOperator.bw, MultiOptionValue>
-// | Record<MultiOperator.in, MultiOptionValue>
-// | Record<MultiOperator.ni, MultiOptionValue>;
 
 type OrOption = Record<OrOperator, Partial<OrOptionValue>[]>;
 
@@ -84,21 +71,19 @@ export enum Operator {
   or = 'OR',
 }
 
-export type Option = SingleOption & MultiOption & OrOption;
+export type Option = Partial<SingleOption & MultiOption & OrOption>;
 
-export type TOption = [Operator, string | string[], unknown];
+export interface Order {
+  [key: string]: 'desc' | 'asc';
+}
 
-export type TOrOption = [Operator.or, ...TOption[]];
-
-export type Order = [string, 'desc' | 'asc'];
-
-export type OpFuncRet = [string, (string | number)[]];
+export type OpFuncRet = [string, (string | number | Date)[]];
 
 export interface IQueryParams {
   table: string;
   column?: string[];
   where?: Option;
-  order?: Order[];
+  order?: Order;
   limit?: number;
   offset?: number;
 }
