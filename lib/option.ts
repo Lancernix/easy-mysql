@@ -1,7 +1,13 @@
-import { isInteger } from 'lodash';
+/**
+ * option handlers
+ */
+import { isInteger, isEqual } from 'lodash';
 import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc } from './operator';
-import { Order, Option, SingleOperator, MultiOperator, OrOperator, ORDER, LIMIT, WHRER, AND } from './typing';
+import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row } from './typing';
+import { ORDER, LIMIT, WHRER, AND, PLACEHOLDER } from './constant';
+import { checkEmptyArray, checkEmptyPlainObject } from './util';
 
+// column handler for select
 export const getColumns = (columns: string[] | undefined) => (!columns?.length ? '*' : columns.join(', '));
 
 export const getOrder = (order: Order | undefined) => {
@@ -18,7 +24,7 @@ export const getLimit = (offset: number, limit: number) => {
   const offsetTag = offset >= 0 && isInteger(offset);
   const limitTag = limit >= 0 && isInteger(limit);
   if (offsetTag && limitTag) {
-    return ` ${LIMIT} ${offset}, ${limit};`;
+    return ` ${LIMIT} ${offset}, ${limit}`;
   } else {
     throw new Error(`'${LIMIT}' need two positive integer params!`);
   }
@@ -26,7 +32,7 @@ export const getLimit = (offset: number, limit: number) => {
 
 export const getWhere = (where: Option | undefined) => {
   let result: string;
-  const optionVals: (string | number)[] = [];
+  const optionVals: (string | number | Date)[] = [];
   if (where === void 0 || !Object.keys(where!).length) {
     result = '';
   } else {
@@ -34,6 +40,8 @@ export const getWhere = (where: Option | undefined) => {
     const keyArr = Object.keys(where!);
     for (let i = 0; i < keyArr.length; i++) {
       const key = keyArr[i];
+      let str: string;
+      let values: (string | number | Date)[];
       switch (key) {
         case SingleOperator.eq:
         case SingleOperator.ge:
@@ -42,34 +50,78 @@ export const getWhere = (where: Option | undefined) => {
         case SingleOperator.lt:
         case SingleOperator.ne:
         case SingleOperator.like:
-          const [_str, _values] = commonOpFunc(key, where![key]);
-          result += _str;
-          optionVals.push(..._values);
+          const [_str, _values] = commonOpFunc(key, where[key]!);
+          str = _str;
+          values = _values;
           break;
         case MultiOperator.bw:
-          const [_strBw, _valuesBw] = bwOpFunc(key, where![key]);
-          result += _strBw;
-          optionVals.push(..._valuesBw);
+          const [_strBw, _valuesBw] = bwOpFunc(key, where[key]!);
+          str = _strBw;
+          values = _valuesBw;
           break;
         case MultiOperator.in:
         case MultiOperator.ni:
-          const [_strI, _valuesI] = inAndNiOpFunc(key, where![key]);
-          result += _strI;
-          optionVals.push(..._valuesI);
+          const [_strI, _valuesI] = inAndNiOpFunc(key, where[key]!);
+          str = _strI;
+          values = _valuesI;
           break;
         case OrOperator.or:
-          const [_strOr, _valuesOr] = orOpFunc(where![key]);
-          result += _strOr;
-          optionVals.push(..._valuesOr);
+          const [_strOr, _valuesOr] = orOpFunc(where[key]!);
+          str = _strOr;
+          values = _valuesOr;
           break;
         default:
           throw new Error(`${key} is not a valid operator!`);
       }
-      i !== keyArr.length - 1 && (result += ` ${AND} `);
+      // non-empty
+      if (!!str) {
+        result += str;
+        optionVals.push(...values);
+        i !== keyArr.length - 1 && (result += ` ${AND} `);
+      }
     }
+    result === ` ${WHRER} ` && (result = '');
   }
   return {
     str: result,
     arr: optionVals,
   };
+};
+
+// cols and vals handler for insert
+export const getColAndVals = (value: Row | Row[]) => {
+  if (Array.isArray(value)) {
+    checkEmptyArray('insert', value);
+    const keyArr = Object.keys(value[0]);
+    const columnStr = '(' + keyArr.join(', ') + ')';
+    let valStr: string = '';
+    const valArr: (string | number | Date)[] = [];
+    for (let i = 0; i < value.length; i++) {
+      const item = value[i];
+      // check if every element of data has the same keys
+      if (!isEqual(keyArr, Object.keys(item))) {
+        throw new Error('no same keys');
+      }
+      const placeholders = Array(keyArr.length).fill(PLACEHOLDER);
+      valStr += i === value.length - 1 ? `(${placeholders.join(', ')})` : `(${placeholders.join(', ')}), `;
+      valArr.push(...Object.values(item));
+    }
+    return { columnStr, valStr, valArr };
+  } else {
+    checkEmptyPlainObject('insert', value);
+    const keyArr = Object.keys(value);
+    const columnStr = '(' + keyArr.join(', ') + ')';
+    const placeholders = Array(keyArr.length).fill(PLACEHOLDER);
+    const valArr = Object.values(value);
+    const valStr = '(' + placeholders.join(', ') + ')';
+    return { columnStr, valStr, valArr };
+  }
+};
+
+// set string for update
+export const getSet = (value: Row) => {
+  checkEmptyPlainObject('update', value);
+  const keyArr = Object.keys(value);
+  const setStr = keyArr.reduce((res: string, key: string) => res + `${key} = ${PLACEHOLDER}, `, '').replace(/,\s$/, '');
+  return { setStr, setVal: Object.values(value) };
 };

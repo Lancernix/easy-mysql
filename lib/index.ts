@@ -1,6 +1,7 @@
-import { createPool, createConnection, ConnectionOptions, Pool } from 'mysql2';
-import { IQueryParams, SELECT, FROM } from './typing';
-import { getColumns, getOrder, getLimit, getWhere } from './option';
+import { createPool, createConnection, ConnectionOptions, Pool, RowDataPacket } from 'mysql2';
+import { SelectParams, CountAndDelParams, InsertParams, UpdateParams } from './typing';
+import { getColumns, getOrder, getLimit, getWhere, getColAndVals, getSet } from './option';
+import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES, WHRER } from './constant';
 
 class MySQLClient {
   pool: Pool;
@@ -14,38 +15,84 @@ class MySQLClient {
     return this.pool.promise().execute(sql, values);
   }
 
-  async select(params: IQueryParams) {
+  // select
+  async select(params: SelectParams) {
     const { table, column, where, order, limit = 1, offset = 0 } = params;
-    if (table === void 0) {
-      throw Error('table params is required!');
-    }
-    let sql: string,
-      columnStr: string,
-      whereStr: string,
-      optionValues: (string | number)[],
-      orderStr: string,
-      limitStr: string;
     // column
-    columnStr = getColumns(column);
+    const columnStr = getColumns(column);
     // order
-    orderStr = getOrder(order);
+    const orderStr = getOrder(order);
     // limit
-    limitStr = getLimit(offset, limit);
-    // where
-    whereStr = getWhere(where).str;
-    // optionValues
-    optionValues = getWhere(where).arr;
+    const limitStr = getLimit(offset, limit);
+    // where & optionValues
+    const { str: whereStr, arr: optionValues } = getWhere(where);
     // prepared statement
-    sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr}`;
-    console.log(sql);
-    console.log(optionValues);
-    const [rows, _fields] = await this._query(sql, optionValues);
-    return rows;
+    const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
+    try {
+      const [rows, _fields] = await this._query(sql, optionValues);
+      return rows;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  // async count(params: IQueryParams) {
-  //   return await this.select();
-  // }
+  // count
+  async count(params: CountAndDelParams): Promise<number | undefined> {
+    const { table, where } = params;
+    // where
+    const whereStr = getWhere(where).str;
+    // optionValues
+    const optionValues = getWhere(where).arr;
+    // prepared statement
+    const sql = `${SELECT} ${COUNT} ${FROM} ${table}${whereStr};`;
+    try {
+      const [rows, _fields] = await this._query(sql, optionValues);
+      return (rows as RowDataPacket)[0][`${COUNT}`];
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // insert
+  async insert(params: InsertParams) {
+    const { table, value } = params;
+    const { columnStr, valStr, valArr } = getColAndVals(value);
+    const sql = `${INSERT} ${INTO} ${table} ${columnStr} ${VALUES} ${valStr};`;
+    try {
+      const [rows, _fields] = await this._query(sql, valArr);
+      return rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // update
+  async update(params: UpdateParams) {
+    const { table, value, where } = params;
+    const { setStr, setVal } = getSet(value);
+    const { str: whereStr, arr: optionValues } = getWhere(where);
+    const sql = `${UPDATE} ${table} ${SET} ${setStr}${whereStr};`;
+    const valArr = [...setVal, ...optionValues];
+    try {
+      const [rows, _fields] = await this._query(sql, valArr);
+      return rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // delete
+  async delete(params: CountAndDelParams) {
+    const { table, where } = params;
+    const { str: whereStr, arr: optionValues } = getWhere(where);
+    const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
+    try {
+      const [rows, _fields] = await this._query(sql, optionValues);
+      return rows;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 export default MySQLClient;

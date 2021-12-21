@@ -1,3 +1,6 @@
+/**
+ * operator handlers
+ */
 import {
   OpFuncRet,
   Operator,
@@ -6,35 +9,9 @@ import {
   MultiOptionValue,
   MultiOperator,
   OrOptionValue,
-  PLACEHOLDER,
-  AND,
-  OR,
 } from './typing';
-import { isPlainObject } from 'lodash';
-
-const checkPlainObject = (key: string, value: unknown): void => {
-  if (!isPlainObject(value)) {
-    throw new Error(`${key}'s value should be a plain object!`);
-  }
-};
-
-const checkEmptyArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || !value.length) {
-    throw new Error(`${key}'s value should be a non-empty array!`);
-  }
-};
-
-const checkTwoElementArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || value.length === 2) {
-    throw new Error(`${key}'s value should be an array with 2 elements!`);
-  }
-};
-
-const checkMoreElementArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || value.length < 2) {
-    throw new Error(`${key}'s value should be an array with 2 elements or more!`);
-  }
-};
+import { AND, OR, PLACEHOLDER } from './constant';
+import { checkEmptyArray, checkMoreElementArray, checkPlainObject, checkTwoElementArray } from './util';
 
 // eq|gt|lt|ge|le|ne|like
 const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => {
@@ -75,16 +52,18 @@ const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   return [optionStr, values];
 };
 
-// in/ni
+// in|ni
 const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   // 占位符组装
-  const compose = (params: string[] | number[] | Date[]): string => {
-    let res: string = '';
-    for (let i = 0; i < params.length; i++) {
-      res += `${PLACEHOLDER}, `;
-    }
-    return res.replace(/,\s$/, '');
-  };
+  const composePlaceholder = (params: string[] | number[] | Date[]): string =>
+    Array(params.length).fill(PLACEHOLDER).join(', ');
+  // const composePlaceholder = (params: string[] | number[] | Date[]): string => {
+  //   let res: string = '';
+  //   for (let i = 0; i < params.length; i++) {
+  //     res += `${PLACEHOLDER}, `;
+  //   }
+  //   return res.replace(/,\s$/, '');
+  // };
 
   checkPlainObject(op, val);
   let optionStr: string = '';
@@ -96,8 +75,8 @@ const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
       checkEmptyArray(key, val[key]);
       optionStr +=
         i === keyArr.length - 1
-          ? `${key} ${Operator[op]} (${compose(val[key])})`
-          : `${key} ${Operator[op]} (${compose(val[key])}) ${AND} `;
+          ? `${key} ${Operator[op]} (${composePlaceholder(val[key])})`
+          : `${key} ${Operator[op]} (${composePlaceholder(val[key])}) ${AND} `;
       values.push(...val[key]);
     }
   }

@@ -1,25 +1,4 @@
 /**
- * constant define
- */
-export const SELECT = 'SELECT';
-
-export const FROM = 'FROM';
-
-export const INSERT = 'INSERT';
-
-export const AND = 'AND';
-
-export const OR = 'OR';
-
-export const WHRER = 'WHERE';
-
-export const ORDER = 'ORDER BY';
-
-export const LIMIT = 'LIMIT';
-
-export const PLACEHOLDER = '?';
-
-/**
  * type define
  */
 
@@ -79,11 +58,27 @@ export interface Order {
 
 export type OpFuncRet = [string, (string | number | Date)[]];
 
-export interface IQueryParams {
+export interface SelectParams {
   table: string;
   column?: string[];
   where?: Option;
   order?: Order;
   limit?: number;
   offset?: number;
+}
+
+export type CountAndDelParams = Pick<SelectParams, 'table' | 'where'>;
+
+export interface Row {
+  [key: string]: string | number | Date;
+}
+export interface InsertParams {
+  table: string;
+  value: Row | Row[];
+}
+
+export interface UpdateParams {
+  table: string;
+  value: Row;
+  where: Option;
 }
