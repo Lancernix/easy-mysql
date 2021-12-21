@@ -1,16 +1,4 @@
 /**
- * constant define
- */
-export declare const SELECT = "SELECT";
-export declare const FROM = "FROM";
-export declare const INSERT = "INSERT";
-export declare const AND = "AND";
-export declare const OR = "OR";
-export declare const WHRER = "WHERE";
-export declare const ORDER = "ORDER BY";
-export declare const LIMIT = "LIMIT";
-export declare const PLACEHOLDER = "?";
-/**
  * type define
  */
 export declare enum SingleOperator {
@@ -23,20 +11,18 @@ export declare enum SingleOperator {
     like = "like"
 }
 export interface SingleOptionValue {
-    column: string;
-    value: string | number;
+    [key: string]: string | number | Date;
 }
-declare type SingleOption = Record<SingleOperator, SingleOptionValue | SingleOptionValue[]>;
+declare type SingleOption = Record<SingleOperator, SingleOptionValue>;
 export declare enum MultiOperator {
     bw = "bw",
     in = "in",
     ni = "ni"
 }
 export interface MultiOptionValue {
-    column: string;
-    value: (string | number)[];
+    [key: string]: string[] | number[] | Date[];
 }
-declare type MultiOption = Record<MultiOperator, MultiOptionValue | MultiOptionValue[]>;
+declare type MultiOption = Record<MultiOperator, MultiOptionValue>;
 export declare enum OrOperator {
     or = "or"
 }
@@ -55,17 +41,30 @@ export declare enum Operator {
     ni = "NOT IN",
     or = "OR"
 }
-export declare type Option = SingleOption & MultiOption & OrOption;
-export declare type TOption = [Operator, string | string[], unknown];
-export declare type TOrOption = [Operator.or, ...TOption[]];
-export declare type Order = [string, 'desc' | 'asc'];
-export declare type OpFuncRet = [string, (string | number)[]];
-export interface IQueryParams {
+export declare type Option = Partial<SingleOption & MultiOption & OrOption>;
+export interface Order {
+    [key: string]: 'desc' | 'asc';
+}
+export declare type OpFuncRet = [string, (string | number | Date)[]];
+export interface SelectParams {
     table: string;
     column?: string[];
     where?: Option;
-    order?: Order[];
+    order?: Order;
     limit?: number;
     offset?: number;
+}
+export declare type CountAndDelParams = Pick<SelectParams, 'table' | 'where'>;
+export interface Row {
+    [key: string]: string | number | Date;
+}
+export interface InsertParams {
+    table: string;
+    value: Row | Row[];
+}
+export interface UpdateParams {
+    table: string;
+    value: Row;
+    where: Option;
 }
 export {};

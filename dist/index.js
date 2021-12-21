@@ -35,9 +35,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var mysql2_1 = require("mysql2");
-var operator_1 = require("./operator");
+var option_1 = require("./option");
+var constant_1 = require("./constant");
 var MySQLClient = /** @class */ (function () {
     function MySQLClient(config) {
         this.pool = (0, mysql2_1.createPool)(config);
@@ -46,87 +56,143 @@ var MySQLClient = /** @class */ (function () {
     MySQLClient.prototype._query = function (sql, values) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, this.pool.execute(sql, values)];
+                return [2 /*return*/, this.pool.promise().execute(sql, values)];
             });
         });
     };
-    // getConnection() {
-    //   const onErr = (err: NodeJS.ErrnoException) => {
-    //     err.name = 'MySQLConnectionError';
-    //     throw err;
-    //   };
-    //   const onConnection = params => {
-    //     return;
-    //   };
-    //   return this.pool.getConnection();
-    // }
+    // select
     MySQLClient.prototype.select = function (params) {
         return __awaiter(this, void 0, void 0, function () {
-            var table, columns, options, orders, _a, limit, _b, offset, sql, columnStr, where, optionValues, order, limitStr, i, item, _c, _str, _values, _d, _strBw, _valuesBw, _e, _strI, _valuesI, _f, _strOr, _valuesOr;
-            return __generator(this, function (_g) {
-                table = params.table, columns = params.columns, options = params.options, orders = params.orders, _a = params.limit, limit = _a === void 0 ? 1 : _a, _b = params.offset, offset = _b === void 0 ? 0 : _b;
-                optionValues = [];
-                // columns
-                columnStr = typeof columns === undefined || !(columns === null || columns === void 0 ? void 0 : columns.length) ? '*' : columns.join(', ');
-                // order
-                if (typeof orders === undefined || !(orders === null || orders === void 0 ? void 0 : orders.length)) {
-                    order = '';
+            var table, column, where, order, _a, limit, _b, offset, columnStr, orderStr, limitStr, _c, whereStr, optionValues, sql, _d, rows, _fields, error_1;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        table = params.table, column = params.column, where = params.where, order = params.order, _a = params.limit, limit = _a === void 0 ? 1 : _a, _b = params.offset, offset = _b === void 0 ? 0 : _b;
+                        columnStr = (0, option_1.getColumns)(column);
+                        orderStr = (0, option_1.getOrder)(order);
+                        limitStr = (0, option_1.getLimit)(offset, limit);
+                        _c = (0, option_1.getWhere)(where), whereStr = _c.str, optionValues = _c.arr;
+                        sql = "".concat(constant_1.SELECT, " ").concat(columnStr, " ").concat(constant_1.FROM, " ").concat(table).concat(whereStr).concat(orderStr).concat(limitStr, ";");
+                        _e.label = 1;
+                    case 1:
+                        _e.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this._query(sql, optionValues)];
+                    case 2:
+                        _d = _e.sent(), rows = _d[0], _fields = _d[1];
+                        return [2 /*return*/, rows];
+                    case 3:
+                        error_1 = _e.sent();
+                        console.log(error_1);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                else {
-                    order = orders.reduce(function (item) { return " ".concat(item[0], " ").concat(item[1].toUpperCase, ","); }, 'ORDER BY').replace(/,$/, '');
+            });
+        });
+    };
+    // count
+    MySQLClient.prototype.count = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            var table, where, whereStr, optionValues, sql, _a, rows, _fields, error_2;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        table = params.table, where = params.where;
+                        whereStr = (0, option_1.getWhere)(where).str;
+                        optionValues = (0, option_1.getWhere)(where).arr;
+                        sql = "".concat(constant_1.SELECT, " ").concat(constant_1.COUNT, " ").concat(constant_1.FROM, " ").concat(table).concat(whereStr, ";");
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this._query(sql, optionValues)];
+                    case 2:
+                        _a = _b.sent(), rows = _a[0], _fields = _a[1];
+                        return [2 /*return*/, rows[0]["".concat(constant_1.COUNT)]];
+                    case 3:
+                        error_2 = _b.sent();
+                        console.log(error_2);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                // limit
-                limitStr = "LIMIT ".concat(offset, ", ").concat(limit);
-                // where
-                if (typeof options === undefined || !(options === null || options === void 0 ? void 0 : options.length)) {
-                    where = '';
+            });
+        });
+    };
+    // insert
+    MySQLClient.prototype.insert = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            var table, value, _a, columnStr, valStr, valArr, sql, _b, rows, _fields, error_3;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        table = params.table, value = params.value;
+                        _a = (0, option_1.getColAndVals)(value), columnStr = _a.columnStr, valStr = _a.valStr, valArr = _a.valArr;
+                        sql = "".concat(constant_1.INSERT, " ").concat(constant_1.INTO, " ").concat(table, " ").concat(columnStr, " ").concat(constant_1.VALUES, " ").concat(valStr, ";");
+                        _c.label = 1;
+                    case 1:
+                        _c.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this._query(sql, valArr)];
+                    case 2:
+                        _b = _c.sent(), rows = _b[0], _fields = _b[1];
+                        return [2 /*return*/, rows];
+                    case 3:
+                        error_3 = _c.sent();
+                        console.log(error_3);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                else {
-                    where = 'WHERE ';
-                    for (i = 0; i < options.length; i++) {
-                        if (!(options[i] instanceof Array) || !options[i].length) {
-                            throw OptionError('every option should be a non-empty array!');
-                        }
-                        item = options[i];
-                        switch (item[0]) {
-                            case EOperator.eq:
-                            case EOperator.gt:
-                            case EOperator.lt:
-                            case EOperator.ge:
-                            case EOperator.le:
-                            case EOperator.ne:
-                            case EOperator.like:
-                                _c = (0, operator_1.commonOpFunc)(item), _str = _c[0], _values = _c[1];
-                                where += _str;
-                                optionValues.push.apply(optionValues, _values);
-                                break;
-                            case EOperator.bw:
-                                _d = (0, operator_1.bwOpFunc)(item), _strBw = _d[0], _valuesBw = _d[1];
-                                where += _strBw;
-                                optionValues.push.apply(optionValues, _valuesBw);
-                                break;
-                            case EOperator.in:
-                            case EOperator.ni:
-                                _e = (0, operator_1.inAndNiOpFunc)(item), _strI = _e[0], _valuesI = _e[1];
-                                where += _strI;
-                                optionValues.push.apply(optionValues, _valuesI);
-                                break;
-                            case EOperator.or:
-                                _f = (0, operator_1.orOpFunc)(item), _strOr = _f[0], _valuesOr = _f[1];
-                                where += _strI;
-                                optionValues.push.apply(optionValues, _valuesI);
-                                break;
-                            default:
-                                throw OperatorError("".concat(item[0], " is not a valid operator!"));
-                        }
-                        i !== options.length - 1 && (where += ' AND ');
-                    }
+            });
+        });
+    };
+    // update
+    MySQLClient.prototype.update = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            var table, value, where, _a, setStr, setVal, _b, whereStr, optionValues, sql, valArr, _c, rows, _fields, error_4;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        table = params.table, value = params.value, where = params.where;
+                        _a = (0, option_1.getSet)(value), setStr = _a.setStr, setVal = _a.setVal;
+                        _b = (0, option_1.getWhere)(where), whereStr = _b.str, optionValues = _b.arr;
+                        sql = "".concat(constant_1.UPDATE, " ").concat(table, " ").concat(constant_1.SET, " ").concat(setStr).concat(whereStr, ";");
+                        valArr = __spreadArray(__spreadArray([], setVal, true), optionValues, true);
+                        _d.label = 1;
+                    case 1:
+                        _d.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this._query(sql, valArr)];
+                    case 2:
+                        _c = _d.sent(), rows = _c[0], _fields = _c[1];
+                        return [2 /*return*/, rows];
+                    case 3:
+                        error_4 = _d.sent();
+                        console.log(error_4);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
-                // prepared statement
-                sql = "SELECT ".concat(columnStr, " FROM ").concat(table, " ").concat(where, " ").concat(order, " ").concat(limitStr);
-                console.log(sql);
-                console.log(optionValues);
-                return [2 /*return*/, this._query(sql, optionValues)];
+            });
+        });
+    };
+    // delete
+    MySQLClient.prototype.delete = function (params) {
+        return __awaiter(this, void 0, void 0, function () {
+            var table, where, _a, whereStr, optionValues, sql, _b, rows, _fields, error_5;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        table = params.table, where = params.where;
+                        _a = (0, option_1.getWhere)(where), whereStr = _a.str, optionValues = _a.arr;
+                        sql = "".concat(constant_1.DELETE, " ").concat(constant_1.FROM, " ").concat(table).concat(whereStr, ";");
+                        _c.label = 1;
+                    case 1:
+                        _c.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this._query(sql, optionValues)];
+                    case 2:
+                        _b = _c.sent(), rows = _b[0], _fields = _b[1];
+                        return [2 /*return*/, rows];
+                    case 3:
+                        error_5 = _c.sent();
+                        console.log(error_5);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
             });
         });
     };

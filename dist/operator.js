@@ -1,98 +1,126 @@
 "use strict";
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.orOpFunc = exports.inAndNiOpFunc = exports.bwOpFunc = exports.commonOpFunc = void 0;
+/**
+ * operator handlers
+ */
+var typing_1 = require("./typing");
+var constant_1 = require("./constant");
+var util_1 = require("./util");
 // eq|gt|lt|ge|le|ne|like
-var commonOpFunc = function (params) {
-    if (!(params instanceof Array) || params.length !== 3) {
-        throw OptionError("common option is an array with 3 elements!");
+var commonOpFunc = function (op, val) {
+    (0, util_1.checkPlainObject)(op, val);
+    var optionStr = '';
+    var values = [];
+    var keyArr = Object.keys(val);
+    if (keyArr.length) {
+        for (var i = 0; i < keyArr.length; i++) {
+            var key = keyArr[i];
+            optionStr +=
+                i === keyArr.length - 1
+                    ? "".concat(key, " ").concat(typing_1.Operator[op], " ").concat(constant_1.PLACEHOLDER)
+                    : "".concat(key, " ").concat(typing_1.Operator[op], " ").concat(constant_1.PLACEHOLDER, " ").concat(constant_1.AND, " ");
+            values.push(val[key]);
+        }
     }
-    if (params[2] instanceof Array) {
-        throw ColumnValueError("".concat(params[0], " operator's column value is not a array!"));
-    }
-    var optionStr = "".concat(String(params[1]), " ").concat(params[0], " ").concat(PLACEHOLDER);
-    return [optionStr, [params[2]]];
+    return [optionStr, values];
 };
 exports.commonOpFunc = commonOpFunc;
 // bw
-var bwOpFunc = function (params) {
-    if (!(params instanceof Array) || params.length !== 3) {
-        throw OptionError("BETWEEN option is an array with 3 elements!");
+var bwOpFunc = function (op, val) {
+    (0, util_1.checkPlainObject)(op, val);
+    var optionStr = '';
+    var values = [];
+    var keyArr = Object.keys(val);
+    if (keyArr.length) {
+        for (var i = 0; i < keyArr.length; i++) {
+            var key = keyArr[i];
+            (0, util_1.checkTwoElementArray)(key, val[key]);
+            optionStr +=
+                i === keyArr.length - 1
+                    ? "".concat(key, " ").concat(typing_1.Operator[op], " ").concat(constant_1.PLACEHOLDER, " ").concat(constant_1.AND, " ").concat(constant_1.PLACEHOLDER)
+                    : "".concat(key, " ").concat(typing_1.Operator[op], " ").concat(constant_1.PLACEHOLDER, " ").concat(constant_1.AND, " ").concat(constant_1.PLACEHOLDER, " ").concat(constant_1.AND, " ");
+            values.push.apply(values, val[key]);
+        }
     }
-    if (!(params[2] instanceof Array) || params[2].length !== 2) {
-        throw ColumnValueError("".concat(params[0], " operator's column value should be a array with 2 element!"));
-    }
-    var optionStr = "".concat(String(params[1]), " ").concat(params[0], " ").concat(PLACEHOLDER, " ").concat(AND, " ").concat(PLACEHOLDER);
-    return [optionStr, __spreadArray([], params[2], true)];
+    return [optionStr, values];
 };
 exports.bwOpFunc = bwOpFunc;
 // in|ni
-var inAndNiOpFunc = function (params) {
-    if (!(params instanceof Array) || params.length !== 3) {
-        throw OptionError("IN or NOT IN option is an array with 3 elements!");
+var inAndNiOpFunc = function (op, val) {
+    // 占位符组装
+    var composePlaceholder = function (params) {
+        return Array(params.length).fill(constant_1.PLACEHOLDER).join(', ');
+    };
+    // const composePlaceholder = (params: string[] | number[] | Date[]): string => {
+    //   let res: string = '';
+    //   for (let i = 0; i < params.length; i++) {
+    //     res += `${PLACEHOLDER}, `;
+    //   }
+    //   return res.replace(/,\s$/, '');
+    // };
+    (0, util_1.checkPlainObject)(op, val);
+    var optionStr = '';
+    var values = [];
+    var keyArr = Object.keys(val);
+    if (keyArr.length) {
+        for (var i = 0; i < keyArr.length; i++) {
+            var key = keyArr[i];
+            (0, util_1.checkEmptyArray)(key, val[key]);
+            optionStr +=
+                i === keyArr.length - 1
+                    ? "".concat(key, " ").concat(typing_1.Operator[op], " (").concat(composePlaceholder(val[key]), ")")
+                    : "".concat(key, " ").concat(typing_1.Operator[op], " (").concat(composePlaceholder(val[key]), ") ").concat(constant_1.AND, " ");
+            values.push.apply(values, val[key]);
+        }
     }
-    if (!(params[2] instanceof Array) || params[2].length === 0) {
-        throw ColumnValueError("".concat(params[0], " operator's column value need a non-empty array!"));
-    }
-    var optionStr = "".concat(String(params[1]), " ").concat(params[0], " (");
-    for (var _index = 0; _index < params[2].length; _index++) {
-        optionStr += _index !== params[2].length - 1 ? "".concat(PLACEHOLDER, ", ") : "".concat(PLACEHOLDER, ")");
-    }
-    // optionStr = optionStr.replace(/,\s$/, '') + ')';
-    return [optionStr, __spreadArray([], params[2], true)];
+    return [optionStr, values];
 };
 exports.inAndNiOpFunc = inAndNiOpFunc;
 // or
-var orOpFunc = function (params) {
-    if (!(params instanceof Array) || params.length < 3) {
-        throw OptionError("OR option is an array with least 3 elements!");
-    }
+var orOpFunc = function (val) {
+    (0, util_1.checkMoreElementArray)('or', val);
     var optionStr = '(';
-    var optionValues = [];
-    for (var _index = 1; _index < params.length; _index++) {
-        var element = params[_index];
-        if (!(element instanceof Array)) {
-            throw OptionError("OR option rest elements should be a TOption array!");
+    var values = [];
+    for (var i = 0; i < val.length; i++) {
+        var keyArr = Object.keys(val[i]);
+        for (var j = 0; j < keyArr.length; j++) {
+            var key = keyArr[j];
+            switch (key) {
+                case typing_1.SingleOperator.eq:
+                case typing_1.SingleOperator.ge:
+                case typing_1.SingleOperator.gt:
+                case typing_1.SingleOperator.le:
+                case typing_1.SingleOperator.lt:
+                case typing_1.SingleOperator.ne:
+                case typing_1.SingleOperator.like:
+                    var valueCommon = val[i][key];
+                    var _a = commonOpFunc(key, valueCommon), _str1 = _a[0], _values1 = _a[1];
+                    optionStr += _str1;
+                    values.push.apply(values, _values1);
+                    break;
+                case typing_1.MultiOperator.bw:
+                    var valueBw = val[i][key];
+                    var _b = bwOpFunc(key, valueBw), _str2 = _b[0], _values2 = _b[1];
+                    optionStr += _str2;
+                    values.push.apply(values, _values2);
+                    break;
+                case typing_1.MultiOperator.in:
+                case typing_1.MultiOperator.ni:
+                    var valueI = val[i][key];
+                    var _c = bwOpFunc(key, valueI), _str3 = _c[0], _values3 = _c[1];
+                    optionStr += _str3;
+                    values.push.apply(values, _values3);
+                    break;
+                default:
+                    throw new Error("".concat(key, " is not a valid operator in or option!"));
+            }
+            j !== keyArr.length - 1 && (optionStr += " ".concat(constant_1.AND, " "));
         }
-        switch (element[0]) {
-            case EOperator.eq:
-            case EOperator.gt:
-            case EOperator.lt:
-            case EOperator.ge:
-            case EOperator.le:
-            case EOperator.ne:
-            case EOperator.like:
-                var _a = commonOpFunc(element), _str1 = _a[0], _values1 = _a[1];
-                optionStr += _str1;
-                optionValues.push.apply(optionValues, _values1);
-                break;
-            case EOperator.bw:
-                var _b = bwOpFunc(element), _str2 = _b[0], _values2 = _b[1];
-                optionStr += _str2;
-                optionValues.push.apply(optionValues, _values2);
-                break;
-            case EOperator.in:
-            case EOperator.ni:
-                var _c = inAndNiOpFunc(element), _str3 = _c[0], _values3 = _c[1];
-                optionStr += _str3;
-                optionValues.push.apply(optionValues, _values3);
-                break;
-            case EOperator.or:
-                throw OperatorError("nested OR is not allowed!");
-            default:
-                throw OperatorError("".concat(element[0], " is not a valid operator!"));
-        }
-        optionStr += _index !== params[2].length - 1 ? ' or ' : ')';
+        optionStr += i === val.length - 1 ? ')' : " ".concat(constant_1.OR, " ");
     }
-    // optionStr = optionStr.replace(/\sor\s$/, '') + ')';
-    return [optionStr, optionValues];
+    // console.log(optionStr);
+    // console.log(values);
+    return [optionStr, values];
 };
 exports.orOpFunc = orOpFunc;

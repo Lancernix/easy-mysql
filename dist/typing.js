@@ -1,21 +1,10 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Operator = exports.OrOperator = exports.MultiOperator = exports.SingleOperator = exports.PLACEHOLDER = exports.LIMIT = exports.ORDER = exports.WHRER = exports.OR = exports.AND = exports.INSERT = exports.FROM = exports.SELECT = void 0;
-/**
- * constant define
- */
-exports.SELECT = 'SELECT';
-exports.FROM = 'FROM';
-exports.INSERT = 'INSERT';
-exports.AND = 'AND';
-exports.OR = 'OR';
-exports.WHRER = 'WHERE';
-exports.ORDER = 'ORDER BY';
-exports.LIMIT = 'LIMIT';
-exports.PLACEHOLDER = '?';
 /**
  * type define
  */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Operator = exports.OrOperator = exports.MultiOperator = exports.SingleOperator = void 0;
+// 单值操作符
 var SingleOperator;
 (function (SingleOperator) {
     SingleOperator["eq"] = "eq";
@@ -26,12 +15,14 @@ var SingleOperator;
     SingleOperator["le"] = "le";
     SingleOperator["like"] = "like";
 })(SingleOperator = exports.SingleOperator || (exports.SingleOperator = {}));
+// 双（多）值操作符
 var MultiOperator;
 (function (MultiOperator) {
     MultiOperator["bw"] = "bw";
     MultiOperator["in"] = "in";
     MultiOperator["ni"] = "ni";
 })(MultiOperator = exports.MultiOperator || (exports.MultiOperator = {}));
+// OR操作符
 var OrOperator;
 (function (OrOperator) {
     OrOperator["or"] = "or";
