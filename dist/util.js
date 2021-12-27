@@ -1,37 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkMoreElementArray = exports.checkTwoElementArray = exports.checkEmptyArray = exports.checkEmptyPlainObject = exports.checkPlainObject = void 0;
+exports.escape = exports.literal = void 0;
+var mysql2_1 = require("mysql2");
+Object.defineProperty(exports, "escape", { enumerable: true, get: function () { return mysql2_1.escape; } });
 /**
- * util functions
+ * check basic format and return the literal of mysql build-in function
+ * @param params function literal
+ * @returns formatted function literal
  */
-var lodash_1 = require("lodash");
-var checkPlainObject = function (key, value) {
-    if (!(0, lodash_1.isPlainObject)(value)) {
-        throw new Error("".concat(key, "'s value should be a plain object!"));
+var literal = function (params) {
+    var funcReg = /^(?:[A-Za-z]+_?)*[A-Za-z]+\(.*\)$/;
+    // check params foramt
+    if (!funcReg.test(params)) {
+        throw new Error('params format is incorrect!');
     }
+    return params.replace(/^[A-Za-z_]+(?=\(.*\)$)/, function (funcName) { return funcName.toUpperCase(); });
 };
-exports.checkPlainObject = checkPlainObject;
-var checkEmptyPlainObject = function (key, value) {
-    if (!(0, lodash_1.isPlainObject)(value) || !Object.keys(value).length) {
-        throw new Error("".concat(key, "'s value should be a non-empty plain object!"));
-    }
-};
-exports.checkEmptyPlainObject = checkEmptyPlainObject;
-var checkEmptyArray = function (key, value) {
-    if (!Array.isArray(value) || !value.length) {
-        throw new Error("".concat(key, "'s value should be a non-empty array!"));
-    }
-};
-exports.checkEmptyArray = checkEmptyArray;
-var checkTwoElementArray = function (key, value) {
-    if (!Array.isArray(value) || value.length !== 2) {
-        throw new Error("".concat(key, "'s value should be an array with 2 elements!"));
-    }
-};
-exports.checkTwoElementArray = checkTwoElementArray;
-var checkMoreElementArray = function (key, value) {
-    if (!Array.isArray(value) || value.length < 2) {
-        throw new Error("".concat(key, "'s value should be an array with 2 elements or more!"));
-    }
-};
-exports.checkMoreElementArray = checkMoreElementArray;
+exports.literal = literal;

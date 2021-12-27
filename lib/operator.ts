@@ -1,6 +1,7 @@
 /**
  * operator handlers
  */
+import { isPlainObject } from 'lodash';
 import {
   OpFuncRet,
   Operator,
@@ -11,7 +12,6 @@ import {
   OrOptionValue,
 } from './typing';
 import { AND, OR, PLACEHOLDER } from './constant';
-import { checkEmptyArray, checkMoreElementArray, checkPlainObject, checkTwoElementArray } from './util';
 
 // eq|gt|lt|ge|le|ne|like
 const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => {
@@ -128,6 +128,39 @@ const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
   // console.log(optionStr);
   // console.log(values);
   return [optionStr, values];
+};
+
+/**
+ * error check
+ */
+const checkPlainObject = (key: string, value: unknown): void => {
+  if (!isPlainObject(value)) {
+    throw new Error(`${key}'s value should be a plain object!`);
+  }
+};
+
+export const checkEmptyPlainObject = (key: string, value: unknown) => {
+  if (!isPlainObject(value) || !Object.keys(value as Record<string, unknown>).length) {
+    throw new Error(`${key}'s value should be a non-empty plain object!`);
+  }
+};
+
+export const checkEmptyArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || !value.length) {
+    throw new Error(`${key}'s value should be a non-empty array!`);
+  }
+};
+
+const checkTwoElementArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || value.length !== 2) {
+    throw new Error(`${key}'s value should be an array with 2 elements!`);
+  }
+};
+
+const checkMoreElementArray = (key: string, value: unknown): void => {
+  if (!Array.isArray(value) || value.length < 2) {
+    throw new Error(`${key}'s value should be an array with 2 elements or more!`);
+  }
 };
 
 export { commonOpFunc, bwOpFunc, inAndNiOpFunc, orOpFunc };

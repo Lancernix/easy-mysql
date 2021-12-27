@@ -2,7 +2,7 @@
  * type define
  */
 
-// 单值操作符
+// single value operator
 export enum SingleOperator {
   eq = 'eq',
   ne = 'ne',
@@ -17,7 +17,7 @@ export interface SingleOptionValue {
 }
 type SingleOption = Record<SingleOperator, SingleOptionValue>;
 
-// 双（多）值操作符
+// multiple value operator
 export enum MultiOperator {
   bw = 'bw',
   in = 'in',
@@ -28,7 +28,7 @@ export interface MultiOptionValue {
 }
 type MultiOption = Record<MultiOperator, MultiOptionValue>;
 
-// OR操作符
+// or operator
 export enum OrOperator {
   or = 'or',
 }

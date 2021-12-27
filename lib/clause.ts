@@ -1,11 +1,11 @@
 /**
- * option handlers
+ * clause handlers
+ * such as column、where and so on
  */
 import { isInteger, isEqual } from 'lodash';
-import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc } from './operator';
+import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc, checkEmptyArray, checkEmptyPlainObject } from './operator';
 import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row } from './typing';
 import { ORDER, LIMIT, WHRER, AND, PLACEHOLDER } from './constant';
-import { checkEmptyArray, checkEmptyPlainObject } from './util';
 
 // column handler for select
 export const getColumns = (columns: string[] | undefined) => (!columns?.length ? '*' : columns.join(', '));

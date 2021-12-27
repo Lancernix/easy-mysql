@@ -51,12 +51,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var mysql2_1 = require("mysql2");
 var query_1 = require("./query");
-var Connection = /** @class */ (function (_super) {
-    __extends(Connection, _super);
-    function Connection(conn) {
+var transaction_1 = require("./transaction");
+var Client = /** @class */ (function (_super) {
+    __extends(Client, _super);
+    function Client(config) {
         var _this = _super.call(this) || this;
-        _this.conn = conn;
+        _this.pool = (0, mysql2_1.createPool)(config);
         return _this;
     }
     /**
@@ -65,13 +67,92 @@ var Connection = /** @class */ (function (_super) {
      * @param values values corresponding to placeholders
      * @returns sql execute result
      */
-    Connection.prototype._query = function (sql, values) {
+    Client.prototype._query = function (sql, values) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, this.conn.execute(sql, values)];
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.pool.promise().execute(sql, values)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
             });
         });
     };
-    return Connection;
+    Client.prototype.beginTransaction = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var conn, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.pool.promise().getConnection()];
+                    case 1:
+                        conn = _a.sent();
+                        return [2 /*return*/, new transaction_1.default(conn)];
+                    case 2:
+                        error_1 = _a.sent();
+                        throw error_1;
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Client.prototype.autoTransction = function (scope, ctx) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, tran, result, err_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        ctx = ctx || {};
+                        if (!!ctx._transactionConnection) return [3 /*break*/, 2];
+                        _a = ctx;
+                        return [4 /*yield*/, this.beginTransaction()];
+                    case 1:
+                        _a._transactionConnection = _b.sent();
+                        _b.label = 2;
+                    case 2:
+                        tran = ctx._transactionConnection;
+                        if (!ctx._transactionScopeCount) {
+                            ctx._transactionScopeCount = 1;
+                        }
+                        else {
+                            ctx._transactionScopeCount++;
+                        }
+                        _b.label = 3;
+                    case 3:
+                        _b.trys.push([3, 7, , 10]);
+                        return [4 /*yield*/, scope(tran)];
+                    case 4:
+                        result = _b.sent();
+                        ctx._transactionScopeCount--;
+                        if (!(ctx._transactionScopeCount === 0)) return [3 /*break*/, 6];
+                        ctx._transactionConnection = null;
+                        return [4 /*yield*/, tran.commit()];
+                    case 5:
+                        _b.sent();
+                        _b.label = 6;
+                    case 6: return [2 /*return*/, result];
+                    case 7:
+                        err_1 = _b.sent();
+                        if (!ctx._transactionConnection) return [3 /*break*/, 9];
+                        ctx._transactionConnection = null;
+                        return [4 /*yield*/, tran.rollback()];
+                    case 8:
+                        _b.sent();
+                        _b.label = 9;
+                    case 9: throw err_1;
+                    case 10: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * escape value for preventing sql injection
+     * @param params input value
+     * @returns escaped string value
+     */
+    Client.prototype.escape = function (params) {
+        return this.pool.escape(params);
+    };
+    return Client;
 }(query_1.default));
-exports.default = Connection;
+exports.default = Client;

@@ -1,34 +1,17 @@
+import { escape } from 'mysql2';
+
 /**
- * util functions
+ * check basic format and return the literal of mysql build-in function
+ * @param params function literal
+ * @returns formatted function literal
  */
-import { isPlainObject } from 'lodash';
-
-export const checkPlainObject = (key: string, value: unknown): void => {
-  if (!isPlainObject(value)) {
-    throw new Error(`${key}'s value should be a plain object!`);
+const literal = (params: string): string => {
+  const funcReg = /^(?:[A-Za-z]+_?)*[A-Za-z]+\(.*\)$/;
+  // check params foramt
+  if (!funcReg.test(params)) {
+    throw new Error('params format is incorrect!');
   }
+  return params.replace(/^[A-Za-z_]+(?=\(.*\)$)/, funcName => funcName.toUpperCase());
 };
 
-export const checkEmptyPlainObject = (key: string, value: unknown) => {
-  if (!isPlainObject(value) || !Object.keys(value as Record<string, unknown>).length) {
-    throw new Error(`${key}'s value should be a non-empty plain object!`);
-  }
-};
-
-export const checkEmptyArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || !value.length) {
-    throw new Error(`${key}'s value should be a non-empty array!`);
-  }
-};
-
-export const checkTwoElementArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || value.length !== 2) {
-    throw new Error(`${key}'s value should be an array with 2 elements!`);
-  }
-};
-
-export const checkMoreElementArray = (key: string, value: unknown): void => {
-  if (!Array.isArray(value) || value.length < 2) {
-    throw new Error(`${key}'s value should be an array with 2 elements or more!`);
-  }
-};
+export { literal, escape };

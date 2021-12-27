@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orOpFunc = exports.inAndNiOpFunc = exports.bwOpFunc = exports.commonOpFunc = void 0;
+exports.orOpFunc = exports.inAndNiOpFunc = exports.bwOpFunc = exports.commonOpFunc = exports.checkEmptyArray = exports.checkEmptyPlainObject = void 0;
 /**
  * operator handlers
  */
+var lodash_1 = require("lodash");
 var typing_1 = require("./typing");
 var constant_1 = require("./constant");
-var util_1 = require("./util");
 // eq|gt|lt|ge|le|ne|like
 var commonOpFunc = function (op, val) {
-    (0, util_1.checkPlainObject)(op, val);
+    checkPlainObject(op, val);
     var optionStr = '';
     var values = [];
     var keyArr = Object.keys(val);
@@ -28,14 +28,14 @@ var commonOpFunc = function (op, val) {
 exports.commonOpFunc = commonOpFunc;
 // bw
 var bwOpFunc = function (op, val) {
-    (0, util_1.checkPlainObject)(op, val);
+    checkPlainObject(op, val);
     var optionStr = '';
     var values = [];
     var keyArr = Object.keys(val);
     if (keyArr.length) {
         for (var i = 0; i < keyArr.length; i++) {
             var key = keyArr[i];
-            (0, util_1.checkTwoElementArray)(key, val[key]);
+            checkTwoElementArray(key, val[key]);
             optionStr +=
                 i === keyArr.length - 1
                     ? "".concat(key, " ").concat(typing_1.Operator[op], " ").concat(constant_1.PLACEHOLDER, " ").concat(constant_1.AND, " ").concat(constant_1.PLACEHOLDER)
@@ -59,14 +59,14 @@ var inAndNiOpFunc = function (op, val) {
     //   }
     //   return res.replace(/,\s$/, '');
     // };
-    (0, util_1.checkPlainObject)(op, val);
+    checkPlainObject(op, val);
     var optionStr = '';
     var values = [];
     var keyArr = Object.keys(val);
     if (keyArr.length) {
         for (var i = 0; i < keyArr.length; i++) {
             var key = keyArr[i];
-            (0, util_1.checkEmptyArray)(key, val[key]);
+            (0, exports.checkEmptyArray)(key, val[key]);
             optionStr +=
                 i === keyArr.length - 1
                     ? "".concat(key, " ").concat(typing_1.Operator[op], " (").concat(composePlaceholder(val[key]), ")")
@@ -79,7 +79,7 @@ var inAndNiOpFunc = function (op, val) {
 exports.inAndNiOpFunc = inAndNiOpFunc;
 // or
 var orOpFunc = function (val) {
-    (0, util_1.checkMoreElementArray)('or', val);
+    checkMoreElementArray('or', val);
     var optionStr = '(';
     var values = [];
     for (var i = 0; i < val.length; i++) {
@@ -124,3 +124,33 @@ var orOpFunc = function (val) {
     return [optionStr, values];
 };
 exports.orOpFunc = orOpFunc;
+/**
+ * error check
+ */
+var checkPlainObject = function (key, value) {
+    if (!(0, lodash_1.isPlainObject)(value)) {
+        throw new Error("".concat(key, "'s value should be a plain object!"));
+    }
+};
+var checkEmptyPlainObject = function (key, value) {
+    if (!(0, lodash_1.isPlainObject)(value) || !Object.keys(value).length) {
+        throw new Error("".concat(key, "'s value should be a non-empty plain object!"));
+    }
+};
+exports.checkEmptyPlainObject = checkEmptyPlainObject;
+var checkEmptyArray = function (key, value) {
+    if (!Array.isArray(value) || !value.length) {
+        throw new Error("".concat(key, "'s value should be a non-empty array!"));
+    }
+};
+exports.checkEmptyArray = checkEmptyArray;
+var checkTwoElementArray = function (key, value) {
+    if (!Array.isArray(value) || value.length !== 2) {
+        throw new Error("".concat(key, "'s value should be an array with 2 elements!"));
+    }
+};
+var checkMoreElementArray = function (key, value) {
+    if (!Array.isArray(value) || value.length < 2) {
+        throw new Error("".concat(key, "'s value should be an array with 2 elements or more!"));
+    }
+};

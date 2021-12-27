@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSet = exports.getColAndVals = exports.getWhere = exports.getLimit = exports.getOrder = exports.getColumns = void 0;
 /**
- * option handlers
+ * clause handlers
+ * such as column、where and so on
  */
 var lodash_1 = require("lodash");
 var operator_1 = require("./operator");
 var typing_1 = require("./typing");
 var constant_1 = require("./constant");
-var util_1 = require("./util");
 // column handler for select
 var getColumns = function (columns) { return (!(columns === null || columns === void 0 ? void 0 : columns.length) ? '*' : columns.join(', ')); };
 exports.getColumns = getColumns;
@@ -96,7 +96,7 @@ exports.getWhere = getWhere;
 // cols and vals handler for insert
 var getColAndVals = function (value) {
     if (Array.isArray(value)) {
-        (0, util_1.checkEmptyArray)('insert', value);
+        (0, operator_1.checkEmptyArray)('insert', value);
         var keyArr = Object.keys(value[0]);
         var columnStr = '(' + keyArr.join(', ') + ')';
         var valStr = '';
@@ -114,7 +114,7 @@ var getColAndVals = function (value) {
         return { columnStr: columnStr, valStr: valStr, valArr: valArr };
     }
     else {
-        (0, util_1.checkEmptyPlainObject)('insert', value);
+        (0, operator_1.checkEmptyPlainObject)('insert', value);
         var keyArr = Object.keys(value);
         var columnStr = '(' + keyArr.join(', ') + ')';
         var placeholders = Array(keyArr.length).fill(constant_1.PLACEHOLDER);
@@ -126,7 +126,7 @@ var getColAndVals = function (value) {
 exports.getColAndVals = getColAndVals;
 // set string for update
 var getSet = function (value) {
-    (0, util_1.checkEmptyPlainObject)('update', value);
+    (0, operator_1.checkEmptyPlainObject)('update', value);
     var keyArr = Object.keys(value);
     var setStr = keyArr.reduce(function (res, key) { return res + "".concat(key, " = ").concat(constant_1.PLACEHOLDER, ", "); }, '').replace(/,\s$/, '');
     return { setStr: setStr, setVal: Object.values(value) };

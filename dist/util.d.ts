@@ -1,5 +1,8 @@
-export declare const checkPlainObject: (key: string, value: unknown) => void;
-export declare const checkEmptyPlainObject: (key: string, value: unknown) => void;
-export declare const checkEmptyArray: (key: string, value: unknown) => void;
-export declare const checkTwoElementArray: (key: string, value: unknown) => void;
-export declare const checkMoreElementArray: (key: string, value: unknown) => void;
+import { escape } from 'mysql2';
+/**
+ * check basic format and return the literal of mysql build-in function
+ * @param params function literal
+ * @returns formatted function literal
+ */
+declare const literal: (params: string) => string;
+export { literal, escape };

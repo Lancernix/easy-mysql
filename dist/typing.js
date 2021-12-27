@@ -4,7 +4,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Operator = exports.OrOperator = exports.MultiOperator = exports.SingleOperator = void 0;
-// 单值操作符
+// single value operator
 var SingleOperator;
 (function (SingleOperator) {
     SingleOperator["eq"] = "eq";
@@ -15,14 +15,14 @@ var SingleOperator;
     SingleOperator["le"] = "le";
     SingleOperator["like"] = "like";
 })(SingleOperator = exports.SingleOperator || (exports.SingleOperator = {}));
-// 双（多）值操作符
+// multiple value operator
 var MultiOperator;
 (function (MultiOperator) {
     MultiOperator["bw"] = "bw";
     MultiOperator["in"] = "in";
     MultiOperator["ni"] = "ni";
 })(MultiOperator = exports.MultiOperator || (exports.MultiOperator = {}));
-// OR操作符
+// or operator
 var OrOperator;
 (function (OrOperator) {
     OrOperator["or"] = "or";

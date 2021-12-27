@@ -52,9 +52,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var query_1 = require("./query");
-var Connection = /** @class */ (function (_super) {
-    __extends(Connection, _super);
-    function Connection(conn) {
+var Transaction = /** @class */ (function (_super) {
+    __extends(Transaction, _super);
+    function Transaction(conn) {
         var _this = _super.call(this) || this;
         _this.conn = conn;
         return _this;
@@ -65,13 +65,65 @@ var Connection = /** @class */ (function (_super) {
      * @param values values corresponding to placeholders
      * @returns sql execute result
      */
-    Connection.prototype._query = function (sql, values) {
+    Transaction.prototype._query = function (sql, values) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, this.conn.execute(sql, values)];
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.conn.execute(sql, values)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
             });
         });
     };
-    return Connection;
+    Transaction.prototype.checkConn = function () {
+        if (!this.conn) {
+            throw new Error('transaction has committed or rollbacked!');
+        }
+    };
+    Transaction.prototype.commit = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.checkConn();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, 4, 5]);
+                        return [4 /*yield*/, this.conn.commit()];
+                    case 2: return [2 /*return*/, _a.sent()];
+                    case 3:
+                        error_1 = _a.sent();
+                        throw error_1;
+                    case 4:
+                        this.conn.release();
+                        this.conn = null;
+                        return [7 /*endfinally*/];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Transaction.prototype.rollback = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.checkConn();
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.conn.rollback()];
+                    case 2: return [2 /*return*/, _a.sent()];
+                    case 3:
+                        error_2 = _a.sent();
+                        throw error_2;
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    return Transaction;
 }(query_1.default));
-exports.default = Connection;
+exports.default = Transaction;

@@ -1,7 +1,7 @@
-import MySQLClient from './index';
-import { Row } from './typing';
+import mysql from './index';
 
-const client = new MySQLClient({
+const { Client } = mysql;
+const client = new Client({
   host: '101.42.92.75',
   port: 3306,
   database: 'sql_exam',
@@ -11,36 +11,22 @@ const client = new MySQLClient({
 });
 
 const test = async () => {
-  const res = await client.select({
-    table: 'issue',
-    column: ['issue_id', 'system', 'directory_id', 'issue_title', 'create_time'],
-    where: {
-      // eq: {
-      //   // directory_id: 'eas4e3g1g4vs',
-      //   // create_user_id: '01412009',
-      // },
-      gt: { create_time: new Date('2021-11-15 17:40:35') },
-      // ne: {},
-      // bw: { create_time: [new Date('2021-11-15 17:30:01'), new Date('2021-11-15 17:45:01')] },
-      // in: { issue_id: [50, 55] },
-      or: [{ eq: { directory_id: 'goik7yndy3p9' } }, { eq: { directory_id: 'eas4e3g1g4vs' } }],
-    },
-    order: { issue_id: 'asc', issue_title: 'desc' },
-    limit: 10,
+  await client.autoTransction(async tran => {
+    tran.insert({
+      table: 'terms',
+      value: {
+        term_name: '学期2',
+      },
+    });
+    const res = await tran.count({ table: 'terms' });
+    console.log(res);
   });
-  console.log(res);
 };
 
 const test1 = async () => {
-  const res = await client.delete({
-    table: 'issue',
-    // where: {
-    //   eq: { issue_id: 50 },
-    // },
-  });
-  // console.log(res.sql);
-  // console.log(res.optionValues);
+  const res = await client.query(`SELECT COUNT(*) FROM users WHERE id = ${client.escape('1')}`);
+  console.log(res);
 };
 
-// test();
-test1();
+test();
+// test1();

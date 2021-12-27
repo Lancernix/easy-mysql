@@ -37,7 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = require("./index");
-var client = new index_1.default({
+var Client = index_1.default.Client;
+var client = new Client({
     host: '101.42.92.75',
     port: 3306,
     database: 'sql_exam',
@@ -46,29 +47,29 @@ var client = new index_1.default({
     // dateStrings: true,
 });
 var test = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var res;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, client.select({
-                    table: 'issue',
-                    column: ['issue_id', 'system', 'directory_id', 'issue_title', 'create_time'],
-                    where: {
-                        // eq: {
-                        //   // directory_id: 'eas4e3g1g4vs',
-                        //   // create_user_id: '01412009',
-                        // },
-                        gt: { create_time: new Date('2021-11-15 17:40:35') },
-                        // ne: {},
-                        // bw: { create_time: [new Date('2021-11-15 17:30:01'), new Date('2021-11-15 17:45:01')] },
-                        // in: { issue_id: [50, 55] },
-                        or: [{ eq: { directory_id: 'goik7yndy3p9' } }, { eq: { directory_id: 'eas4e3g1g4vs' } }],
-                    },
-                    order: { issue_id: 'asc', issue_title: 'desc' },
-                    limit: 10,
-                })];
+            case 0: return [4 /*yield*/, client.autoTransction(function (tran) { return __awaiter(void 0, void 0, void 0, function () {
+                    var res;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                tran.insert({
+                                    table: 'terms',
+                                    value: {
+                                        term_name: '学期2',
+                                    },
+                                });
+                                return [4 /*yield*/, tran.count({ table: 'terms' })];
+                            case 1:
+                                res = _a.sent();
+                                console.log(res);
+                                return [2 /*return*/];
+                        }
+                    });
+                }); })];
             case 1:
-                res = _a.sent();
-                console.log(res);
+                _a.sent();
                 return [2 /*return*/];
         }
     });
@@ -77,17 +78,13 @@ var test1 = function () { return __awaiter(void 0, void 0, void 0, function () {
     var res;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, client.delete({
-                    table: 'issue',
-                    // where: {
-                    //   eq: { issue_id: 50 },
-                    // },
-                })];
+            case 0: return [4 /*yield*/, client.query("SELECT COUNT(*) FROM users WHERE id = ".concat(client.escape('1')))];
             case 1:
                 res = _a.sent();
+                console.log(res);
                 return [2 /*return*/];
         }
     });
 }); };
-// test();
-test1();
+test();
+// test1();
