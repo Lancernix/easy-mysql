@@ -52,13 +52,6 @@ var inAndNiOpFunc = function (op, val) {
     var composePlaceholder = function (params) {
         return Array(params.length).fill(constant_1.PLACEHOLDER).join(', ');
     };
-    // const composePlaceholder = (params: string[] | number[] | Date[]): string => {
-    //   let res: string = '';
-    //   for (let i = 0; i < params.length; i++) {
-    //     res += `${PLACEHOLDER}, `;
-    //   }
-    //   return res.replace(/,\s$/, '');
-    // };
     checkPlainObject(op, val);
     var optionStr = '';
     var values = [];
@@ -119,8 +112,6 @@ var orOpFunc = function (val) {
         }
         optionStr += i === val.length - 1 ? ')' : " ".concat(constant_1.OR, " ");
     }
-    // console.log(optionStr);
-    // console.log(values);
     return [optionStr, values];
 };
 exports.orOpFunc = orOpFunc;

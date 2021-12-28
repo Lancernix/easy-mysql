@@ -1,32 +1,24 @@
 import mysql from './index';
 
-const { Client } = mysql;
+const { Client, literal } = mysql;
 const client = new Client({
-  host: '101.42.92.75',
+  host: 'localhost',
   port: 3306,
-  database: 'sql_exam',
-  user: 'sqladminuser',
-  password: '123sql_ADMIN_user456',
+  database: 'test',
+  user: 'local',
+  password: '123456',
   // dateStrings: true,
 });
 
-const test = async () => {
-  await client.autoTransction(async tran => {
-    tran.insert({
-      table: 'terms',
-      value: {
-        term_name: '学期2',
-      },
-    });
-    const res = await tran.count({ table: 'terms' });
-    console.log(res);
-  });
-};
+const TABLE = 'node_mysql_test';
 
-const test1 = async () => {
-  const res = await client.query(`SELECT COUNT(*) FROM users WHERE id = ${client.escape('1')}`);
-  console.log(res);
+const test = async () => {
+  const result = await client.select({
+    table: TABLE,
+    column: ['ids', 'name'],
+    where: { eq: { name: 'kate' } },
+  });
+  console.log(result);
 };
 
 test();
-// test1();

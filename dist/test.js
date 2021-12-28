@@ -37,54 +37,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = require("./index");
-var Client = index_1.default.Client;
+var Client = index_1.default.Client, literal = index_1.default.literal;
 var client = new Client({
-    host: '101.42.92.75',
+    host: 'localhost',
     port: 3306,
-    database: 'sql_exam',
-    user: 'sqladminuser',
-    password: '123sql_ADMIN_user456',
+    database: 'test',
+    user: 'local',
+    password: '123456',
     // dateStrings: true,
 });
+var TABLE = 'node_mysql_test';
 var test = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var result;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, client.autoTransction(function (tran) { return __awaiter(void 0, void 0, void 0, function () {
-                    var res;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                tran.insert({
-                                    table: 'terms',
-                                    value: {
-                                        term_name: '学期2',
-                                    },
-                                });
-                                return [4 /*yield*/, tran.count({ table: 'terms' })];
-                            case 1:
-                                res = _a.sent();
-                                console.log(res);
-                                return [2 /*return*/];
-                        }
-                    });
-                }); })];
+            case 0: return [4 /*yield*/, client.select({
+                    table: TABLE,
+                    column: ['ids', 'name'],
+                    where: { eq: { name: 'kate' } },
+                })];
             case 1:
-                _a.sent();
-                return [2 /*return*/];
-        }
-    });
-}); };
-var test1 = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var res;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, client.query("SELECT COUNT(*) FROM users WHERE id = ".concat(client.escape('1')))];
-            case 1:
-                res = _a.sent();
-                console.log(res);
+                result = _a.sent();
+                console.log(result);
                 return [2 /*return*/];
         }
     });
 }); };
 test();
-// test1();

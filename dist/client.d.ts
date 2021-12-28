@@ -13,8 +13,12 @@ export default class Client extends Query {
     _query(sql: string, values?: unknown | unknown[] | {
         [param: string]: unknown;
     }): Promise<[import("mysql2/typings/mysql/lib/protocol/packets/OkPacket") | import("mysql2/typings/mysql/lib/protocol/packets/ResultSetHeader") | import("mysql2/typings/mysql/lib/protocol/packets/RowDataPacket")[] | import("mysql2/typings/mysql/lib/protocol/packets/RowDataPacket")[][] | import("mysql2/typings/mysql/lib/protocol/packets/OkPacket")[], import("mysql2/typings/mysql/lib/protocol/packets/FieldPacket")[]]>;
+    /**
+     * manual begin transaction method
+     * @returns Transaction instance
+     */
     beginTransaction(): Promise<Transaction>;
-    autoTransction(scope: (tran: Transaction) => unknown, ctx?: Record<string, unknown>): Promise<unknown>;
+    autoTransaction(scope: (tran: Transaction) => unknown, ctx?: Record<string, unknown>): Promise<unknown>;
     /**
      * escape value for preventing sql injection
      * @param params input value

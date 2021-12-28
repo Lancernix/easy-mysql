@@ -70,33 +70,36 @@ var Client = /** @class */ (function (_super) {
     Client.prototype._query = function (sql, values) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.pool.promise().execute(sql, values)];
-                    case 1: return [2 /*return*/, _a.sent()];
+                try {
+                    return [2 /*return*/, this.pool.promise().execute(sql, values)];
                 }
+                catch (error) {
+                    throw error;
+                }
+                return [2 /*return*/];
             });
         });
     };
+    /**
+     * manual begin transaction method
+     * @returns Transaction instance
+     */
     Client.prototype.beginTransaction = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var conn, error_1;
+            var conn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.pool.promise().getConnection()];
+                    case 0: return [4 /*yield*/, this.pool.promise().getConnection()];
                     case 1:
                         conn = _a.sent();
+                        // start transaction
+                        conn.beginTransaction();
                         return [2 /*return*/, new transaction_1.default(conn)];
-                    case 2:
-                        error_1 = _a.sent();
-                        throw error_1;
-                    case 3: return [2 /*return*/];
                 }
             });
         });
     };
-    Client.prototype.autoTransction = function (scope, ctx) {
+    Client.prototype.autoTransaction = function (scope, ctx) {
         return __awaiter(this, void 0, void 0, function () {
             var _a, tran, result, err_1;
             return __generator(this, function (_b) {
@@ -125,19 +128,19 @@ var Client = /** @class */ (function (_super) {
                         result = _b.sent();
                         ctx._transactionScopeCount--;
                         if (!(ctx._transactionScopeCount === 0)) return [3 /*break*/, 6];
-                        ctx._transactionConnection = null;
                         return [4 /*yield*/, tran.commit()];
                     case 5:
                         _b.sent();
+                        ctx._transactionConnection = null;
                         _b.label = 6;
                     case 6: return [2 /*return*/, result];
                     case 7:
                         err_1 = _b.sent();
                         if (!ctx._transactionConnection) return [3 /*break*/, 9];
-                        ctx._transactionConnection = null;
                         return [4 /*yield*/, tran.rollback()];
                     case 8:
                         _b.sent();
+                        ctx._transactionConnection = null;
                         _b.label = 9;
                     case 9: throw err_1;
                     case 10: return [2 /*return*/];

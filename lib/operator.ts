@@ -57,13 +57,6 @@ const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   // 占位符组装
   const composePlaceholder = (params: string[] | number[] | Date[]): string =>
     Array(params.length).fill(PLACEHOLDER).join(', ');
-  // const composePlaceholder = (params: string[] | number[] | Date[]): string => {
-  //   let res: string = '';
-  //   for (let i = 0; i < params.length; i++) {
-  //     res += `${PLACEHOLDER}, `;
-  //   }
-  //   return res.replace(/,\s$/, '');
-  // };
 
   checkPlainObject(op, val);
   let optionStr: string = '';
@@ -125,8 +118,6 @@ const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
     }
     optionStr += i === val.length - 1 ? ')' : ` ${OR} `;
   }
-  // console.log(optionStr);
-  // console.log(values);
   return [optionStr, values];
 };
 

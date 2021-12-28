@@ -15,8 +15,12 @@ export default class Transaction extends Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async _query(sql: string, values?: unknown) {
-    return await this.conn!.execute(sql, values);
+  async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
+    try {
+      return await this.conn!.execute(sql, values);
+    } catch (error) {
+      throw error;
+    }
   }
 
   checkConn() {
@@ -28,7 +32,7 @@ export default class Transaction extends Query {
   async commit() {
     this.checkConn();
     try {
-      return await this.conn!.commit();
+      return this.conn!.commit();
     } catch (error) {
       throw error;
     } finally {
@@ -40,9 +44,12 @@ export default class Transaction extends Query {
   async rollback() {
     this.checkConn();
     try {
-      return await this.conn!.rollback();
+      return this.conn!.rollback();
     } catch (error) {
       throw error;
+    } finally {
+      this.conn!.release();
+      this.conn = null;
     }
   }
 }

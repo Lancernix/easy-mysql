@@ -1,5 +1,4 @@
 import { createPool, Pool, PoolOptions } from 'mysql2';
-import Connection from './connection';
 import Query from './query';
 import Transaction from './transaction';
 
@@ -18,19 +17,25 @@ export default class Client extends Query {
    * @returns sql execute result
    */
   async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
-    return await this.pool.promise().execute(sql, values);
-  }
-
-  async beginTransaction() {
     try {
-      const conn = await this.pool.promise().getConnection();
-      return new Transaction(conn);
+      return this.pool.promise().execute(sql, values);
     } catch (error) {
       throw error;
     }
   }
 
-  async autoTransction(scope: (tran: Transaction) => unknown, ctx?: Record<string, unknown>) {
+  /**
+   * manual begin transaction method
+   * @returns Transaction instance
+   */
+  async beginTransaction() {
+    const conn = await this.pool.promise().getConnection();
+    // start transaction
+    conn.beginTransaction();
+    return new Transaction(conn);
+  }
+
+  async autoTransaction(scope: (tran: Transaction) => unknown, ctx?: Record<string, unknown>) {
     ctx = ctx || {};
     if (!ctx._transactionConnection) {
       ctx._transactionConnection = await this.beginTransaction();
@@ -46,14 +51,14 @@ export default class Client extends Query {
       const result = await scope(tran as Transaction);
       (ctx._transactionScopeCount as number)--;
       if (ctx._transactionScopeCount === 0) {
-        ctx._transactionConnection = null;
         await (tran as Transaction).commit();
+        ctx._transactionConnection = null;
       }
       return result;
     } catch (err) {
       if (ctx._transactionConnection) {
-        ctx._transactionConnection = null;
         await (tran as Transaction).rollback();
+        ctx._transactionConnection = null;
       }
       throw err;
     }
