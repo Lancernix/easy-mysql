@@ -4,7 +4,7 @@
   "description": "基于node-mysql2的快速CURD工具",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --config jestconfig.json",
     "build": "tsc",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -17,6 +17,9 @@
       "prettier --write"
     ]
   },
+  "files": [
+    "lib/**/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lancernix/easy-mysqlx.git"
@@ -36,6 +39,7 @@
     "mysql2": "^2.3.3"
   },
   "devDependencies": {
+    "@types/jest": "^27.0.3",
     "@types/lodash": "^4.14.178",
     "@types/node": "^16.11.11",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
@@ -43,8 +47,10 @@
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.4",
+    "jest": "^27.4.5",
     "lint-staged": "^12.1.4",
     "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
     "typescript": "^4.5.2"
   }
 }
