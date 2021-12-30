@@ -16,11 +16,7 @@ export default class Transaction extends Query {
    * @returns sql execute result
    */
   async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
-    try {
-      return await this.conn!.execute(sql, values);
-    } catch (error) {
-      throw error;
-    }
+    return await this.conn!.execute(sql, values);
   }
 
   checkConn() {
