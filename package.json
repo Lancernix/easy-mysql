@@ -10,11 +10,15 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "lint-staged": {
-    "src/**/*.ts": "eslint"
+    "src/**/*.ts": [
+      "eslint",
+      "prettier --write"
+    ]
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "commit-msg": "echo 'lint and format'"
     }
   },
   "repository": {
