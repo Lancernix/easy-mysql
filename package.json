@@ -1,5 +1,5 @@
 {
-  "name": "easy-mysql",
+  "name": "easy-mysqlx",
   "version": "1.0.0",
   "description": "基于node-mysql2的快速CURD工具",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lancernix/easy-mysql.git"
+    "url": "git+https://github.com/Lancernix/easy-mysqlx.git"
   },
   "keywords": [
     "node",
@@ -19,9 +19,9 @@
   "author": "lancernix",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Lancernix/easy-mysql/issues"
+    "url": "https://github.com/Lancernix/easy-mysqlx/issues"
   },
-  "homepage": "https://github.com/Lancernix/easy-mysql#readme",
+  "homepage": "https://github.com/Lancernix/easy-mysqlx#readme",
   "dependencies": {
     "lodash": "^4.17.21",
     "mysql2": "^2.3.3"
