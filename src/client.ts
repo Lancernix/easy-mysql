@@ -17,11 +17,7 @@ export default class Client extends Query {
    * @returns sql execute result
    */
   async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
-    try {
-      return this.pool.promise().execute(sql, values);
-    } catch (error) {
-      throw error;
-    }
+    return this.pool.promise().execute(sql, values);
   }
 
   /**

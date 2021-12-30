@@ -42,6 +42,8 @@ export const getWhere = (where: Option | undefined) => {
       const key = keyArr[i];
       let str: string;
       let values: (string | number | Date)[];
+      let _str: string;
+      let _values: (string | number | Date)[];
       switch (key) {
         case SingleOperator.eq:
         case SingleOperator.ge:
@@ -50,31 +52,31 @@ export const getWhere = (where: Option | undefined) => {
         case SingleOperator.lt:
         case SingleOperator.ne:
         case SingleOperator.like:
-          const [_str, _values] = commonOpFunc(key, where[key]!);
+          [_str, _values] = commonOpFunc(key, where[key]!);
           str = _str;
           values = _values;
           break;
         case MultiOperator.bw:
-          const [_strBw, _valuesBw] = bwOpFunc(key, where[key]!);
-          str = _strBw;
-          values = _valuesBw;
+          [_str, _values] = bwOpFunc(key, where[key]!);
+          str = _str;
+          values = _values;
           break;
         case MultiOperator.in:
         case MultiOperator.ni:
-          const [_strI, _valuesI] = inAndNiOpFunc(key, where[key]!);
-          str = _strI;
-          values = _valuesI;
+          [_str, _values] = inAndNiOpFunc(key, where[key]!);
+          str = _str;
+          values = _values;
           break;
         case OrOperator.or:
-          const [_strOr, _valuesOr] = orOpFunc(where[key]!);
-          str = _strOr;
-          values = _valuesOr;
+          [_str, _values] = orOpFunc(where[key]!);
+          str = _str;
+          values = _values;
           break;
         default:
           throw new Error(`${key} is not a valid operator!`);
       }
       // non-empty
-      if (!!str) {
+      if (str) {
         result += str;
         optionVals.push(...values);
         i !== keyArr.length - 1 && (result += ` ${AND} `);
@@ -94,7 +96,7 @@ export const getColAndVals = (value: Row | Row[]) => {
     checkEmptyArray('insert', value);
     const keyArr = Object.keys(value[0]);
     const columnStr = '(' + keyArr.join(', ') + ')';
-    let valStr: string = '';
+    let valStr = '';
     const valArr: (string | number | Date)[] = [];
     for (let i = 0; i < value.length; i++) {
       const item = value[i];

@@ -47,12 +47,8 @@ export default class Query {
     const { str: whereStr, arr: optionValues } = getWhere(where);
     // prepared statement
     const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
-    try {
-      const [rows, _fields] = await this._query(sql, optionValues);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return rows;
   }
 
   /**
@@ -68,12 +64,8 @@ export default class Query {
     const optionValues = getWhere(where).arr;
     // prepared statement
     const sql = `${SELECT} ${COUNT} ${FROM} ${table}${whereStr};`;
-    try {
-      const [rows, _fields] = await this._query(sql, optionValues);
-      return (rows as RowDataPacket)[0][`${COUNT}`];
-    } catch (error) {
-      throw error;
-    }
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return (rows as RowDataPacket)[0][`${COUNT}`];
   }
 
   /**
@@ -85,12 +77,8 @@ export default class Query {
     const { table, value } = params;
     const { columnStr, valStr, valArr } = getColAndVals(value);
     const sql = `${INSERT} ${INTO} ${table} ${columnStr} ${VALUES} ${valStr};`;
-    try {
-      const [rows, _fields] = await this._query(sql, valArr);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
+    const [rows, _fields] = await this._query(sql, valArr);
+    return rows;
   }
 
   /**
@@ -104,12 +92,8 @@ export default class Query {
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${UPDATE} ${table} ${SET} ${setStr}${whereStr};`;
     const valArr = [...setVal, ...optionValues];
-    try {
-      const [rows, _fields] = await this._query(sql, valArr);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
+    const [rows, _fields] = await this._query(sql, valArr);
+    return rows;
   }
 
   /**
@@ -121,11 +105,7 @@ export default class Query {
     const { table, where } = params;
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
-    try {
-      const [rows, _fields] = await this._query(sql, optionValues);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return rows;
   }
 }

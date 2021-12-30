@@ -16,7 +16,7 @@ import { AND, OR, PLACEHOLDER } from './constant';
 // eq|gt|lt|ge|le|ne|like
 const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => {
   checkPlainObject(op, val);
-  let optionStr: string = '';
+  let optionStr = '';
   const values: (string | number | Date)[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
@@ -35,7 +35,7 @@ const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => 
 // bw
 const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   checkPlainObject(op, val);
-  let optionStr: string = '';
+  let optionStr = '';
   const values: (string | number | Date)[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
@@ -59,7 +59,7 @@ const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
     Array(params.length).fill(PLACEHOLDER).join(', ');
 
   checkPlainObject(op, val);
-  let optionStr: string = '';
+  let optionStr = '';
   const values: (string | number | Date)[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
@@ -79,12 +79,16 @@ const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
 // or
 const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
   checkMoreElementArray('or', val);
-  let optionStr: string = '(';
+  let optionStr = '(';
   const values: (string | number | Date)[] = [];
   for (let i = 0; i < val.length; i++) {
     const keyArr = Object.keys(val[i]);
     for (let j = 0; j < keyArr.length; j++) {
       const key = keyArr[j];
+      let _str: string;
+      let _values: (string | number | Date)[];
+      let sValue: SingleOptionValue;
+      let mValue: MultiOptionValue;
       switch (key) {
         case SingleOperator.eq:
         case SingleOperator.ge:
@@ -93,23 +97,23 @@ const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
         case SingleOperator.lt:
         case SingleOperator.ne:
         case SingleOperator.like:
-          const valueCommon = (val[i] as Record<SingleOperator, SingleOptionValue>)[key];
-          const [_str1, _values1] = commonOpFunc(key, valueCommon);
-          optionStr += _str1;
-          values.push(..._values1);
+          sValue = (val[i] as Record<SingleOperator, SingleOptionValue>)[key];
+          [_str, _values] = commonOpFunc(key, sValue);
+          optionStr += _str;
+          values.push(..._values);
           break;
         case MultiOperator.bw:
-          const valueBw = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
-          const [_str2, _values2] = bwOpFunc(key, valueBw);
-          optionStr += _str2;
-          values.push(..._values2);
+          mValue = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
+          [_str, _values] = bwOpFunc(key, mValue);
+          optionStr += _str;
+          values.push(..._values);
           break;
         case MultiOperator.in:
         case MultiOperator.ni:
-          const valueI = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
-          const [_str3, _values3] = bwOpFunc(key, valueI);
-          optionStr += _str3;
-          values.push(..._values3);
+          mValue = (val[i] as Record<MultiOperator, MultiOptionValue>)[key];
+          [_str, _values] = bwOpFunc(key, mValue);
+          optionStr += _str;
+          values.push(..._values);
           break;
         default:
           throw new Error(`${key} is not a valid operator in or option!`);
