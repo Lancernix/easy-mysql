@@ -31,12 +31,18 @@ export default class Client extends Query {
     return new Transaction(conn);
   }
 
+  /**
+   * auto transaction method
+   * @param scope function with query statements
+   * @param ctx context, such koa's ctx or egg's ctx, make sure only one active transaction on this ctx
+   * @returns transaction result
+   */
   async autoTransaction(scope: (tran: Transaction) => unknown, ctx?: Record<string, unknown>) {
     ctx = ctx || {};
     if (!ctx._transactionConnection) {
       ctx._transactionConnection = await this.beginTransaction();
     }
-    const tran = ctx._transactionConnection;
+    const tran = ctx._transactionConnection as Transaction;
 
     if (!ctx._transactionScopeCount) {
       ctx._transactionScopeCount = 1;
@@ -44,7 +50,7 @@ export default class Client extends Query {
       (ctx._transactionScopeCount as number)++;
     }
     try {
-      const result = await scope(tran as Transaction);
+      const result = await scope(tran);
       (ctx._transactionScopeCount as number)--;
       if (ctx._transactionScopeCount === 0) {
         await (tran as Transaction).commit();
@@ -58,14 +64,5 @@ export default class Client extends Query {
       }
       throw err;
     }
-  }
-
-  /**
-   * escape value for preventing sql injection
-   * @param params input value
-   * @returns escaped string value
-   */
-  escape(params: unknown): string {
-    return this.pool.escape(params);
   }
 }

@@ -33,9 +33,9 @@ export default class Query {
   /**
    * select method
    * @param params a object including table、column、where、order、limit and offset attributes
-   * @returns sql execute result
+   * @returns row data array
    */
-  async select(params: SelectParams) {
+  async select(params: SelectParams): Promise<RowDataPacket[]> {
     const { table, column, where, order, limit = 1, offset = 0 } = params;
     // column
     const columnStr = getColumns(column);
@@ -48,7 +48,7 @@ export default class Query {
     // prepared statement
     const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
     const [rows, _fields] = await this._query(sql, optionValues);
-    return rows;
+    return rows as RowDataPacket[];
   }
 
   /**
@@ -56,7 +56,7 @@ export default class Query {
    * @param params a object including table and where attributes
    * @returns row count
    */
-  async count(params: CountAndDelParams): Promise<number | undefined> {
+  async count(params: CountAndDelParams): Promise<number> {
     const { table, where } = params;
     // where
     const whereStr = getWhere(where).str;
@@ -65,7 +65,7 @@ export default class Query {
     // prepared statement
     const sql = `${SELECT} ${COUNT} ${FROM} ${table}${whereStr};`;
     const [rows, _fields] = await this._query(sql, optionValues);
-    return (rows as RowDataPacket)[0][`${COUNT}`];
+    return (rows as RowDataPacket[])[0][`${COUNT}`];
   }
 
   /**
@@ -73,12 +73,12 @@ export default class Query {
    * @param params a object including table and value attributes
    * @returns sql execute result
    */
-  async insert(params: InsertParams) {
+  async insert(params: InsertParams): Promise<ResultSetHeader> {
     const { table, value } = params;
     const { columnStr, valStr, valArr } = getColAndVals(value);
     const sql = `${INSERT} ${INTO} ${table} ${columnStr} ${VALUES} ${valStr};`;
     const [rows, _fields] = await this._query(sql, valArr);
-    return rows;
+    return rows as ResultSetHeader;
   }
 
   /**
@@ -86,14 +86,14 @@ export default class Query {
    * @param params a object including table、value and where attributes
    * @returns sql execute result
    */
-  async update(params: UpdateParams) {
+  async update(params: UpdateParams): Promise<ResultSetHeader> {
     const { table, value, where } = params;
     const { setStr, setVal } = getSet(value);
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${UPDATE} ${table} ${SET} ${setStr}${whereStr};`;
     const valArr = [...setVal, ...optionValues];
     const [rows, _fields] = await this._query(sql, valArr);
-    return rows;
+    return rows as ResultSetHeader;
   }
 
   /**
@@ -101,11 +101,11 @@ export default class Query {
    * @param params a object including table and where attributes
    * @returns sql execute result
    */
-  async delete(params: CountAndDelParams) {
+  async delete(params: CountAndDelParams): Promise<ResultSetHeader> {
     const { table, where } = params;
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
     const [rows, _fields] = await this._query(sql, optionValues);
-    return rows;
+    return rows as ResultSetHeader;
   }
 }
