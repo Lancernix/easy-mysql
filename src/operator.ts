@@ -10,7 +10,7 @@ import {
   MultiOptionValue,
   MultiOperator,
   OrOptionValue,
-} from './typing';
+} from './types';
 import { AND, OR, PLACEHOLDER } from './constant';
 
 // eq|gt|lt|ge|le|ne|like

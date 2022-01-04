@@ -4,7 +4,7 @@
  */
 import { isInteger, isEqual } from 'lodash';
 import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc, checkEmptyArray, checkEmptyPlainObject } from './operator';
-import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row } from './typing';
+import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row } from './types';
 import { ORDER, LIMIT, WHRER, AND, PLACEHOLDER } from './constant';
 
 // column handler for select

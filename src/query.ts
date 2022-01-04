@@ -4,7 +4,7 @@
 import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2';
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
-import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './typing';
+import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './types';
 
 export default class Query {
   /**
