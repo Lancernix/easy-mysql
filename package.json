@@ -2,14 +2,19 @@
   "name": "easy-mysqlx",
   "version": "1.0.0",
   "description": "基于node-mysql2的快速CURD工具",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/typing/index.d.ts",
   "scripts": {
     "test": "jest --config jestconfig.json",
     "build": "tsc",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "husky install",
-    "lint-staged": "lint-staged"
+    "prepare": "husky install && rm -rf lib && npm run build",
+    "lint-staged": "lint-staged",
+    "prepublishOnly": "npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add .",
+    "postversion": "git push && git push --tags"
   },
   "lint-staged": {
     "src/**/*.ts": [
