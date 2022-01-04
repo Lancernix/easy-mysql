@@ -1,5 +1,5 @@
 import Client from './client';
-import { literal, escape } from './util';
+import { escape } from 'mysql2';
 
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
@@ -7,6 +7,5 @@ process.on('unhandledRejection', (reason, p) => {
 
 export default {
   Client,
-  literal,
   escape,
 };

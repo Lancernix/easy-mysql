@@ -26,8 +26,9 @@ export default class Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
-    return this._query(sql, values);
+  async query(sql: string, values: unknown | unknown[] | { [param: string]: unknown } = []) {
+    const [rows, _fields] = await this._query(sql, values);
+    return rows;
   }
 
   /**
