@@ -54,7 +54,7 @@ const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
 
 // in|ni
 const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
-  // 占位符组装
+  // placeholder compose
   const composePlaceholder = (params: string[] | number[] | Date[]): string =>
     Array(params.length).fill(PLACEHOLDER).join(', ');
 

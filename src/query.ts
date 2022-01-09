@@ -1,7 +1,7 @@
 /**
  * basic query class, implements the CURD methods
  */
-import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2';
+import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escape } from 'mysql2';
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
 import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './types';
@@ -108,5 +108,14 @@ export default class Query {
     const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
     const [rows, _fields] = await this._query(sql, optionValues);
     return rows as ResultSetHeader;
+  }
+
+  /**
+   * escape method
+   * @param params any value
+   * @returns string
+   */
+  escape(params: unknown) {
+    return _escape(params);
   }
 }
