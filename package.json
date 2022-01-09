@@ -1,7 +1,7 @@
 {
   "name": "easy-mysqlx",
-  "version": "1.0.0",
-  "description": "基于node-mysql2的快速CURD工具",
+  "version": "1.0.1",
+  "description": "fast CURD api tools based node-mysql2",
   "main": "lib/index.js",
   "types": "lib/typing/index.d.ts",
   "scripts": {
