@@ -9,21 +9,39 @@ const client = new Client({
   database: 'test',
   user: 'local',
   password: '123456',
-  dateStrings: true,
+});
+
+it('table data init', async () => {
+  // initialize data
+  await client.insert({
+    table: TABLE,
+    value: [
+      { name: 'tom', age: 17, status: 1 },
+      { name: 'tim', age: 17, status: 1 },
+      { name: 'jerry', age: 18, status: 0 },
+      { name: 'james', age: 17, status: 1 },
+      { name: 'james', age: 20, status: 0 },
+      { name: 'kate', age: 25, status: 1 },
+      { name: 'harden', age: 17, status: 1 },
+      { name: 'harden', age: 20, status: 1 },
+      { name: 'harden', age: 40, status: 0 },
+      { name: 'timo', age: 48, status: 0 },
+      { name: 'yasuo', age: 77, status: 1 },
+      { name: 'akl', age: 50, status: 1 },
+      { name: 'lux', age: 8, status: 1 },
+    ],
+  });
 });
 
 // ****** query test start ******
 it('async query without placeholders', async () => {
-  const result = await client.query(`SELECT id, name, age FROM ${TABLE} WHERE id = 27;`);
-  expect(result).toEqual([{ id: 27, name: 'kate', age: 50 }]);
+  const result = await client.query(`SELECT name, age FROM ${TABLE} WHERE name = 'tom';`);
+  expect(result).toEqual([{ name: 'tom', age: 17 }]);
 });
 
 it('simple async query with placeholders', async () => {
-  const result = await client.query(`SELECT id, name, age FROM ${TABLE} WHERE id >= ? AND status = ?;`, [50, 0]);
-  expect(result).toEqual([
-    { id: 54, name: 'harden', age: 44 },
-    { id: 57, name: 'harden', age: 26 },
-  ]);
+  const result = await client.query(`SELECT name, age FROM ${TABLE} WHERE age >= ? AND status = ?;`, [55, 1]);
+  expect(result).toEqual([{ name: 'yasuo', age: 77 }]);
 });
 // ****** query test end ******
 
@@ -31,18 +49,18 @@ it('simple async query with placeholders', async () => {
 it('simple async select', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name', 'age'],
+    column: ['name', 'age'],
     where: {
-      eq: { id: 52 },
+      eq: { name: 'kate' },
     },
   });
-  expect(result).toEqual([{ id: 52, name: 'lux', age: 90 }]);
+  expect(result).toEqual([{ name: 'kate', age: 25 }]);
 });
 
 it('simple async select with non-existent id', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name', 'age'],
+    column: ['name', 'age'],
     where: {
       eq: { id: 100 },
     },
@@ -55,16 +73,15 @@ it('async select with empty column array', async () => {
     table: TABLE,
     column: [],
     where: {
-      eq: { name: 'lux' },
+      eq: { name: 'tim' },
     },
   });
   expect(result).toEqual([
     {
-      id: 52,
-      name: 'lux',
-      age: 90,
+      id: 2,
+      name: 'tim',
+      age: 17,
       status: 1,
-      created_time: '2021-12-31 17:35:41',
       msg: 'message',
     },
   ]);
@@ -74,16 +91,15 @@ it('async select without column param', async () => {
   const result = await client.select({
     table: TABLE,
     where: {
-      eq: { name: 'lux' },
+      eq: { name: 'tim' },
     },
   });
   expect(result).toEqual([
     {
-      id: 52,
-      name: 'lux',
-      age: 90,
+      id: 2,
+      name: 'tim',
+      age: 17,
       status: 1,
-      created_time: '2021-12-31 17:35:41',
       msg: 'message',
     },
   ]);
@@ -92,19 +108,19 @@ it('async select without column param', async () => {
 it('async select without where param', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['name', 'age'],
     limit: 2,
   });
   expect(result).toEqual([
-    { id: 23, name: 'tom' },
-    { id: 24, name: 'tim' },
+    { name: 'tom', age: 17 },
+    { name: 'tim', age: 17 },
   ]);
 });
 
 it('async select with limit and offset params', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['name', 'age'],
     where: {
       eq: { status: 1 },
     },
@@ -112,75 +128,72 @@ it('async select with limit and offset params', async () => {
     offset: 1,
   });
   expect(result).toEqual([
-    { id: 24, name: 'tim' },
-    { id: 25, name: 'jerry' },
-    { id: 26, name: 'james' },
+    { name: 'tim', age: 17 },
+    { name: 'james', age: 17 },
+    { name: 'kate', age: 25 },
   ]);
 });
 
 it('async select with order params', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['name', 'age'],
     where: {
       eq: { status: 1 },
-      le: { id: 26 },
+      le: { id: 5 },
     },
     limit: 3,
     order: { id: 'desc' },
   });
   expect(result).toEqual([
-    { id: 26, name: 'james' },
-    { id: 25, name: 'jerry' },
-    { id: 24, name: 'tim' },
+    { name: 'james', age: 17 },
+    { name: 'tim', age: 17 },
+    { name: 'tom', age: 17 },
   ]);
 });
 
 it('async select with complex where options', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['id', 'name', 'age', 'status'],
     where: {
       eq: { status: 1, name: 'harden' },
-      gt: { age: 33 },
-      bw: { id: [50, 56] },
-      ni: { id: [53] },
+      gt: { id: 5 },
+      bw: { age: [7, 30] },
+      ni: { age: [17] },
     },
   });
-  expect(result).toEqual([{ id: 56, name: 'harden' }]);
+  expect(result).toEqual([{ id: 8, name: 'harden', age: 20, status: 1 }]);
 });
 
 it('async select with where simple or options', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['name', 'age'],
     where: {
       eq: { status: 1 },
-      le: { age: 32 },
+      le: { age: 20 },
       or: [{ eq: { name: 'harden' } }, { eq: { name: 'tim' } }],
     },
     limit: 10,
   });
   expect(result).toEqual([
-    { id: 24, name: 'tim' },
-    { id: 42, name: 'harden' },
-    { id: 55, name: 'harden' },
+    { name: 'tim', age: 17 },
+    { name: 'harden', age: 17 },
+    { name: 'harden', age: 20 },
   ]);
 });
 
 it('async select with where complex or options', async () => {
   const result = await client.select({
     table: TABLE,
-    column: ['id', 'name'],
+    column: ['name', 'age'],
     where: {
       or: [{ eq: { name: 'harden', status: 0 }, le: { age: 30 } }, { eq: { name: 'tim' } }],
     },
     limit: 10,
   });
-  expect(result).toEqual([
-    { id: 24, name: 'tim' },
-    { id: 57, name: 'harden' },
-  ]);
+  expect(result).toEqual([{ name: 'tim', age: 17 }]);
 });
 // ****** select test end ******
 
@@ -189,8 +202,8 @@ it('async single insert', async () => {
   const result = await client.insert({
     table: TABLE,
     value: {
-      name: 'timo',
-      age: '9',
+      name: 'lulu',
+      age: 87,
       status: 0,
     },
   });
@@ -202,17 +215,17 @@ it('async multi insert', async () => {
     table: TABLE,
     value: [
       {
-        name: 'yasuo',
+        name: 'vn',
         age: '21',
         status: 1,
       },
       {
-        name: 'yohn',
+        name: 'qin',
         age: '24',
         status: 1,
       },
       {
-        name: 'akl',
+        name: 'lee',
         age: '26',
         status: 0,
       },
@@ -269,7 +282,7 @@ it('async count', async () => {
       eq: { status: 1 },
     },
   });
-  expect(result).toEqual(13);
+  expect(result).toEqual(10);
 });
 // ****** count test end ******
 
@@ -279,13 +292,13 @@ it('async transaction success', async () => {
   try {
     const res = await tran.select({
       table: TABLE,
-      column: ['id'],
-      where: { eq: { name: 'yohn' } },
+      column: ['id', 'age'],
+      where: { eq: { name: 'lux' } },
     });
-    expect(res).toEqual([{ id: 60 }]);
+    expect(res).toEqual([{ id: 13, age: 8 }]);
     const res1 = await tran.update({
       table: TABLE,
-      value: { msg: 'update yohn message wohhhhh' },
+      value: { msg: 'update lux message' },
       where: { eq: { id: res[0].id } },
     });
     expect(res1.affectedRows).toEqual(1);
@@ -300,13 +313,13 @@ it('async transaction error', async () => {
   try {
     const res = await tran.select({
       table: TABLE,
-      column: ['id'],
-      where: { eq: { name: 'yohn' } },
+      column: ['id', 'age'],
+      where: { eq: { name: 'lux' } },
     });
-    expect(res).toEqual([{ id: 60 }]);
+    expect(res).toEqual([{ id: 13, age: 8 }]);
     const res1 = await tran.update({
       table: TABLE,
-      value: { msg: 'update yohn message wohhhhh' },
+      value: { msg: 'update lux message' },
       where: { eq: { ids: res[0].id } },
     });
     expect(res1.affectedRows).toEqual(1);
@@ -323,21 +336,21 @@ it('async auto transaction', async () => {
   const result = await client.autoTransaction(async tran => {
     const res = await tran.select({
       table: TABLE,
-      column: ['id'],
-      where: { eq: { name: 'yohn' } },
+      column: ['id', 'age'],
+      where: { eq: { name: 'lux' } },
     });
-    expect(res).toEqual([{ id: 60 }]);
+    expect(res).toEqual([{ id: 13, age: 8 }]);
     const res1 = await tran.update({
       table: TABLE,
-      value: { msg: 'update yohn message' },
+      value: { msg: 'update lux message wohhhhh' },
       where: { eq: { id: res[0].id } },
     });
     expect(res1.affectedRows).toEqual(1);
     const result = await tran.insert({
       table: TABLE,
       value: {
-        name: 'vn',
-        age: 77,
+        name: 'xin',
+        age: 66,
       },
     });
     return result;
@@ -350,21 +363,21 @@ it('async auto transaction error', async () => {
     const result = await client.autoTransaction(async tran => {
       const res = await tran.select({
         table: TABLE,
-        column: ['id'],
-        where: { eq: { name: 'yohn' } },
+        column: ['id', 'age'],
+        where: { eq: { name: 'lux' } },
       });
-      expect(res).toEqual([{ id: 60 }]);
+      expect(res).toEqual([{ id: 13, age: 8 }]);
       const res1 = await tran.update({
         table: TABLE,
-        value: { msg: 'update yohn message' },
+        value: { msg: 'update lux message wohhhhh error' },
         where: { eq: { ids: res[0].id } },
       });
       expect(res1.affectedRows).toEqual(1);
       const result = await tran.insert({
         table: TABLE,
         value: {
-          name: 'vn',
-          age: 77,
+          name: 'kenxi',
+          age: 4,
         },
       });
       return result;
@@ -376,8 +389,31 @@ it('async auto transaction error', async () => {
 });
 // ****** auto transaction test end ******
 
+// ****** literal test start ******
+it('use literal', async () => {
+  await client.update({
+    table: TABLE,
+    value: {
+      name: client.literal("concat('tom', ' and ', 'jerry')"),
+      msg: 'now()',
+    },
+    where: {
+      eq: { age: 17, id: 2 },
+    },
+  });
+  const result = await client.select({
+    table: TABLE,
+    column: ['name', 'msg'],
+    where: {
+      eq: { id: 2 },
+    },
+  });
+  expect(result).toEqual([{ name: 'tom and jerry', msg: 'now()' }]);
+});
+// ****** literal test end ******
+
 it('disconnect', async () => {
   // this test function make no sense, just for us to finish the test successfully
-  // note: disconnect must be called at the last！！
+  // note: disconnect must be called at the last!!
   client.pool.end();
 });

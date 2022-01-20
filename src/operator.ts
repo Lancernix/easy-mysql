@@ -3,6 +3,7 @@
  */
 import { isPlainObject } from 'lodash';
 import {
+  BasicType,
   OpFuncRet,
   Operator,
   SingleOptionValue,
@@ -17,7 +18,7 @@ import { AND, OR, PLACEHOLDER } from './constant';
 const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => {
   checkPlainObject(op, val);
   let optionStr = '';
-  const values: (string | number | Date)[] = [];
+  const values: BasicType[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
     for (let i = 0; i < keyArr.length; i++) {
@@ -36,7 +37,7 @@ const commonOpFunc = (op: SingleOperator, val: SingleOptionValue): OpFuncRet => 
 const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   checkPlainObject(op, val);
   let optionStr = '';
-  const values: (string | number | Date)[] = [];
+  const values: BasicType[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
     for (let i = 0; i < keyArr.length; i++) {
@@ -55,12 +56,11 @@ const bwOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
 // in|ni
 const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
   // placeholder compose
-  const composePlaceholder = (params: string[] | number[] | Date[]): string =>
-    Array(params.length).fill(PLACEHOLDER).join(', ');
+  const composePlaceholder = (params: BasicType[]): string => Array(params.length).fill(PLACEHOLDER).join(', ');
 
   checkPlainObject(op, val);
   let optionStr = '';
-  const values: (string | number | Date)[] = [];
+  const values: BasicType[] = [];
   const keyArr = Object.keys(val);
   if (keyArr.length) {
     for (let i = 0; i < keyArr.length; i++) {
@@ -80,13 +80,13 @@ const inAndNiOpFunc = (op: MultiOperator, val: MultiOptionValue): OpFuncRet => {
 const orOpFunc = (val: Partial<OrOptionValue>[]): OpFuncRet => {
   checkMoreElementArray('or', val);
   let optionStr = '(';
-  const values: (string | number | Date)[] = [];
+  const values: BasicType[] = [];
   for (let i = 0; i < val.length; i++) {
     const keyArr = Object.keys(val[i]);
     for (let j = 0; j < keyArr.length; j++) {
       const key = keyArr[j];
       let _str: string;
-      let _values: (string | number | Date)[];
+      let _values: BasicType[];
       let sValue: SingleOptionValue;
       let mValue: MultiOptionValue;
       switch (key) {

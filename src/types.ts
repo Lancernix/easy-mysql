@@ -1,6 +1,13 @@
 /**
  * type define
  */
+import Literal from './literal';
+
+export type BasicType = string | number | Date | Literal;
+
+export interface Row {
+  [key: string]: BasicType;
+}
 
 // single value operator
 export enum SingleOperator {
@@ -12,9 +19,8 @@ export enum SingleOperator {
   le = 'le',
   like = 'like',
 }
-export interface SingleOptionValue {
-  [key: string]: string | number | Date;
-}
+
+export type SingleOptionValue = Row;
 type SingleOption = Record<SingleOperator, SingleOptionValue>;
 
 // multiple value operator
@@ -24,7 +30,7 @@ export enum MultiOperator {
   ni = 'ni',
 }
 export interface MultiOptionValue {
-  [key: string]: string[] | number[] | Date[];
+  [key: string]: BasicType[];
 }
 type MultiOption = Record<MultiOperator, MultiOptionValue>;
 
@@ -56,7 +62,7 @@ export interface Order {
   [key: string]: 'desc' | 'asc';
 }
 
-export type OpFuncRet = [string, (string | number | Date)[]];
+export type OpFuncRet = [string, BasicType[]];
 
 export interface SelectParams {
   table: string;
@@ -68,10 +74,6 @@ export interface SelectParams {
 }
 
 export type CountAndDelParams = Pick<SelectParams, 'table' | 'where'>;
-
-export interface Row {
-  [key: string]: string | number | Date;
-}
 export interface InsertParams {
   table: string;
   value: Row | Row[];
@@ -80,5 +82,5 @@ export interface InsertParams {
 export interface UpdateParams {
   table: string;
   value: Row;
-  where: Option;
+  where?: Option;
 }

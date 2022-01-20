@@ -1,6 +1,8 @@
 import { createPool, Pool, PoolOptions } from 'mysql2';
+import Literal from './literal';
 import Query from './query';
 import Transaction from './transaction';
+import { BasicType } from './types';
 
 export default class Client extends Query {
   pool: Pool;
@@ -16,7 +18,23 @@ export default class Client extends Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
+  protected async _query(sql: string, values?: BasicType[]) {
+    let useLiteral = false;
+    const escapedValues = values
+      ? values.map(item => {
+          if (item instanceof Literal) {
+            useLiteral = true;
+            return this.escape(item.text)
+              .slice(1, -1)
+              .replace(/\\(?=['"])/g, '');
+          }
+          return this.escape(item);
+        })
+      : [];
+    if (useLiteral) {
+      escapedValues.forEach(value => (sql = sql.replace(/\?/, value)));
+      return this.pool.promise().query(sql);
+    }
     return this.pool.promise().execute(sql, values);
   }
 

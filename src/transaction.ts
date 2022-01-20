@@ -15,7 +15,7 @@ export default class Transaction extends Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
+  protected async _query(sql: string, values?: unknown | unknown[] | { [param: string]: unknown }) {
     return await this.conn!.execute(sql, values);
   }
 

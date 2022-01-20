@@ -4,6 +4,7 @@
 import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escape } from 'mysql2';
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
+import Literal from './literal';
 import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './types';
 
 export default class Query {
@@ -13,7 +14,7 @@ export default class Query {
    * @param _values values corresponding to placeholders
    * @returns sql execute result
    */
-  async _query(
+  protected async _query(
     _sql: string,
     _values?: unknown | unknown[] | { [param: string]: unknown },
   ): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
@@ -26,7 +27,7 @@ export default class Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async query(sql: string, values: unknown | unknown[] | { [param: string]: unknown } = []) {
+  async query(sql: string, values: unknown[] = []) {
     const [rows, _fields] = await this._query(sql, values);
     return rows;
   }
@@ -117,5 +118,14 @@ export default class Query {
    */
   escape(params: unknown) {
     return _escape(params);
+  }
+
+  /**
+   * format literal method
+   * @param params build-in function string
+   * @returns Literal instance
+   */
+  literal(params: string): Literal {
+    return new Literal(params);
   }
 }

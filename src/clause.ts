@@ -4,7 +4,7 @@
  */
 import { isInteger, isEqual } from 'lodash';
 import { bwOpFunc, commonOpFunc, inAndNiOpFunc, orOpFunc, checkEmptyArray, checkEmptyPlainObject } from './operator';
-import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row } from './types';
+import { Order, Option, SingleOperator, MultiOperator, OrOperator, Row, BasicType } from './types';
 import { ORDER, LIMIT, WHRER, AND, PLACEHOLDER } from './constant';
 
 // column handler for select
@@ -32,7 +32,7 @@ export const getLimit = (offset: number, limit: number) => {
 
 export const getWhere = (where: Option | undefined) => {
   let result: string;
-  const optionVals: (string | number | Date)[] = [];
+  const optionVals: BasicType[] = [];
   if (where === void 0 || !Object.keys(where!).length) {
     result = '';
   } else {
@@ -41,9 +41,9 @@ export const getWhere = (where: Option | undefined) => {
     for (let i = 0; i < keyArr.length; i++) {
       const key = keyArr[i];
       let str: string;
-      let values: (string | number | Date)[];
+      let values: BasicType[];
       let _str: string;
-      let _values: (string | number | Date)[];
+      let _values: BasicType[];
       switch (key) {
         case SingleOperator.eq:
         case SingleOperator.ge:
@@ -97,12 +97,12 @@ export const getColAndVals = (value: Row | Row[]) => {
     const keyArr = Object.keys(value[0]);
     const columnStr = '(' + keyArr.join(', ') + ')';
     let valStr = '';
-    const valArr: (string | number | Date)[] = [];
+    const valArr: BasicType[] = [];
     for (let i = 0; i < value.length; i++) {
       const item = value[i];
       // check if every element of data has the same keys
       if (!isEqual(keyArr, Object.keys(item))) {
-        throw new Error('no same keys');
+        throw new Error(`every element of insert value param must have the same keys!`);
       }
       const placeholders = Array(keyArr.length).fill(PLACEHOLDER);
       valStr += i === value.length - 1 ? `(${placeholders.join(', ')})` : `(${placeholders.join(', ')}), `;
