@@ -20,13 +20,17 @@ export const getOrder = (order: Order | undefined) => {
   }
 };
 
-export const getLimit = (offset: number, limit: number) => {
-  const offsetTag = offset >= 0 && isInteger(offset);
-  const limitTag = limit >= 0 && isInteger(limit);
-  if (offsetTag && limitTag) {
-    return ` ${LIMIT} ${offset}, ${limit}`;
+export const getLimit = (offset: number | undefined, limit: number | undefined) => {
+  if (limit === void 0) {
+    return '';
   } else {
-    throw new Error(`'${LIMIT}' need two positive integer params!`);
+    const offsetTag = isInteger(offset) && Number(offset) >= 0;
+    const limitTag = isInteger(limit) && Number(limit) >= 0;
+    if (offsetTag && limitTag) {
+      return ` ${LIMIT} ${offset}, ${limit}`;
+    } else {
+      throw new Error(`'${LIMIT}' need two non-negative integer params! Please check the offset and limit params`);
+    }
   }
 };
 

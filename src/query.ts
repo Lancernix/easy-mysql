@@ -38,7 +38,7 @@ export default class Query {
    * @returns row data array
    */
   async select(params: SelectParams): Promise<RowDataPacket[]> {
-    const { table, column, where, order, limit = 1, offset = 0 } = params;
+    const { table, column, where, order, limit, offset = 0 } = params;
     // column
     const columnStr = getColumns(column);
     // order
