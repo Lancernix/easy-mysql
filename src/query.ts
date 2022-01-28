@@ -112,6 +112,29 @@ export default class Query {
   }
 
   /**
+   * get method
+   * @param params a object including table、column、where and order attributes
+   * @returns row data object
+   */
+  async get(params: SelectParams): Promise<RowDataPacket> {
+    const { table, column, where, order } = params;
+    const limit = 1,
+      offset = 0;
+    // column
+    const columnStr = getColumns(column);
+    // order
+    const orderStr = getOrder(order);
+    // limit
+    const limitStr = getLimit(offset, limit);
+    // where & optionValues
+    const { str: whereStr, arr: optionValues } = getWhere(where);
+    // prepared statement
+    const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return (rows as RowDataPacket[])[0];
+  }
+
+  /**
    * escape method
    * @param params any value
    * @returns string

@@ -45,6 +45,18 @@ it('simple async query with placeholders', async () => {
 });
 // ****** query test end ******
 
+// ****** get test start ******
+it('simple async get', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: ['name', 'age'],
+    where: {
+      eq: { name: 'kate' },
+    },
+  });
+  expect(result).toEqual([{ name: 'kate', age: 25 }]);
+});
+
 // ****** select test start ******
 it('simple async select', async () => {
   const result = await client.select({
