@@ -5,7 +5,7 @@ import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escap
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
 import Literal from './literal';
-import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './types';
+import { CountAndDelParams, InsertParams, SelectParams, GetParams, UpdateParams } from './types';
 
 export default class Query {
   /**
@@ -116,7 +116,7 @@ export default class Query {
    * @param params a object including table、column、where and order attributes
    * @returns row data object
    */
-  async get(params: SelectParams): Promise<RowDataPacket> {
+  async get(params: GetParams): Promise<RowDataPacket> {
     const { table, column, where, order } = params;
     const limit = 1,
       offset = 0;

@@ -4,11 +4,17 @@ import Client from '../src/client';
 const TABLE = 'node_mysql_test';
 
 const client = new Client({
-  host: 'localhost',
+  host: '10.59.193.158',
   port: 3306,
   database: 'test',
   user: 'local',
   password: '123456',
+
+  // host: '10.188.36.4',
+  // port: 8002,
+  // user: 'tom',
+  // password: '123456',
+  // database: 'faq',
 });
 
 it('table data init', async () => {
@@ -54,7 +60,39 @@ it('simple async get', async () => {
       eq: { name: 'kate' },
     },
   });
-  expect(result).toEqual([{ name: 'kate', age: 25 }]);
+  expect(result).toEqual({ name: 'kate', age: 25 });
+});
+
+it('simple async get', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: ['name', 'age'],
+    where: {
+      eq: { name: 'harden' },
+    },
+  });
+  expect(result).toEqual({ name: 'harden', age: 17 });
+});
+
+it('simple async get with empty column array', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: [],
+    where: {
+      eq: { name: 'tim' },
+    },
+  });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
+});
+
+it('simple async get without column param', async () => {
+  const result = await client.get({
+    table: TABLE,
+    where: {
+      eq: { name: 'tim' },
+    },
+  });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
 });
 
 // ****** select test start ******

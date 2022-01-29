@@ -1,6 +1,7 @@
 /**
  * type define
  */
+import { type } from 'os';
 import Literal from './literal';
 
 export type BasicType = string | number | Date | Literal;
@@ -72,6 +73,8 @@ export interface SelectParams {
   limit?: number;
   offset?: number;
 }
+
+export type GetParams = Omit<SelectParams, 'limit' | 'offset'>;
 
 export type CountAndDelParams = Pick<SelectParams, 'table' | 'where'>;
 export interface InsertParams {
