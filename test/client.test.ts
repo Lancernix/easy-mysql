@@ -4,17 +4,11 @@ import Client from '../src/client';
 const TABLE = 'node_mysql_test';
 
 const client = new Client({
-  host: '10.59.193.158',
+  host: 'localhost',
   port: 3306,
   database: 'test',
   user: 'local',
   password: '123456',
-
-  // host: '10.188.36.4',
-  // port: 8002,
-  // user: 'tom',
-  // password: '123456',
-  // database: 'faq',
 });
 
 it('table data init', async () => {
