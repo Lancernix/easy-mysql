@@ -1,7 +1,6 @@
 /**
  * type define
  */
-import { type } from 'os';
 import Literal from './literal';
 
 export type BasicType = string | number | Date | Literal;
