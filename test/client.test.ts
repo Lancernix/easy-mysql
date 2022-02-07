@@ -57,7 +57,7 @@ it('simple async get', async () => {
   expect(result).toEqual({ name: 'kate', age: 25 });
 });
 
-it('simple async get', async () => {
+it('another simple async get', async () => {
   const result = await client.get({
     table: TABLE,
     column: ['name', 'age'],
@@ -76,7 +76,7 @@ it('simple async get with empty column array', async () => {
       eq: { name: 'tim' },
     },
   });
-  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1, id: 2, msg: 'message' });
 });
 
 it('simple async get without column param', async () => {
@@ -86,7 +86,7 @@ it('simple async get without column param', async () => {
       eq: { name: 'tim' },
     },
   });
-  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1, id: 2, msg: 'message' });
 });
 
 // ****** select test start ******
