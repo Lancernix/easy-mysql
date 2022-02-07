@@ -73,6 +73,8 @@ export interface SelectParams {
   offset?: number;
 }
 
+export type GetParams = Omit<SelectParams, 'limit' | 'offset'>;
+
 export type CountAndDelParams = Pick<SelectParams, 'table' | 'where'>;
 export interface InsertParams {
   table: string;

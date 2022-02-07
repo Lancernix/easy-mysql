@@ -45,6 +45,50 @@ it('simple async query with placeholders', async () => {
 });
 // ****** query test end ******
 
+// ****** get test start ******
+it('simple async get', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: ['name', 'age'],
+    where: {
+      eq: { name: 'kate' },
+    },
+  });
+  expect(result).toEqual({ name: 'kate', age: 25 });
+});
+
+it('simple async get', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: ['name', 'age'],
+    where: {
+      eq: { name: 'harden' },
+    },
+  });
+  expect(result).toEqual({ name: 'harden', age: 17 });
+});
+
+it('simple async get with empty column array', async () => {
+  const result = await client.get({
+    table: TABLE,
+    column: [],
+    where: {
+      eq: { name: 'tim' },
+    },
+  });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
+});
+
+it('simple async get without column param', async () => {
+  const result = await client.get({
+    table: TABLE,
+    where: {
+      eq: { name: 'tim' },
+    },
+  });
+  expect(result).toEqual({ name: 'tim', age: 17, status: 1,  id: 2,  msg: 'message' });
+});
+
 // ****** select test start ******
 it('simple async select', async () => {
   const result = await client.select({

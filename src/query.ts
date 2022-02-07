@@ -5,7 +5,7 @@ import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escap
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
 import Literal from './literal';
-import { CountAndDelParams, InsertParams, SelectParams, UpdateParams } from './types';
+import { CountAndDelParams, InsertParams, SelectParams, GetParams, UpdateParams } from './types';
 
 export default class Query {
   /**
@@ -109,6 +109,29 @@ export default class Query {
     const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
     const [rows, _fields] = await this._query(sql, optionValues);
     return rows as ResultSetHeader;
+  }
+
+  /**
+   * get method
+   * @param params a object including table、column、where and order attributes
+   * @returns row data object
+   */
+  async get(params: GetParams): Promise<RowDataPacket> {
+    const { table, column, where, order } = params;
+    const limit = 1,
+      offset = 0;
+    // column
+    const columnStr = getColumns(column);
+    // order
+    const orderStr = getOrder(order);
+    // limit
+    const limitStr = getLimit(offset, limit);
+    // where & optionValues
+    const { str: whereStr, arr: optionValues } = getWhere(where);
+    // prepared statement
+    const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
+    const [rows, _fields] = await this._query(sql, optionValues);
+    return (rows as RowDataPacket[])[0];
   }
 
   /**
