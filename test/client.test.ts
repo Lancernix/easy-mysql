@@ -9,6 +9,7 @@ const client = new Client({
   database: 'test',
   user: 'local',
   password: '123456',
+  charset: 'UTF8MB4_GENERAL_CI',
 });
 
 it('table data init', async () => {

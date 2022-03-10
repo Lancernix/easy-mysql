@@ -1,7 +1,10 @@
 /**
  * type define
  */
+import { PoolOptions } from 'mysql2/typings/mysql';
 import Literal from './literal';
+
+export type Config = PoolOptions & { connResetRetry?: number };
 
 export type BasicType = string | number | Date | Literal;
 

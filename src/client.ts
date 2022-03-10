@@ -1,41 +1,45 @@
-import { createPool, Pool, PoolOptions } from 'mysql2';
-import Literal from './literal';
+import {
+  createPool,
+  FieldPacket,
+  OkPacket,
+  Pool,
+  // PoolOptions,
+  QueryError,
+  ResultSetHeader,
+  RowDataPacket,
+} from 'mysql2';
 import Query from './query';
 import Transaction from './transaction';
-import { BasicType } from './types';
+import { BasicType, Config } from './types';
 
 export default class Client extends Query {
   pool: Pool;
 
-  constructor(config: PoolOptions) {
+  constructor(config: Config) {
     super();
-    this.pool = createPool(config);
+    const { connResetRetry, ...rest } = config;
+    this.retryCount = connResetRetry || 3;
+    this.pool = createPool(rest);
   }
 
-  /**
-   * basic query method
-   * @param sql (prepared) sql statement
-   * @param values values corresponding to placeholders
-   * @returns sql execute result
-   */
-  protected async _query(sql: string, values?: BasicType[]) {
-    let useLiteral = false;
-    const escapedValues = values
-      ? values.map(item => {
-          if (item instanceof Literal) {
-            useLiteral = true;
-            return this.escape(item.text)
-              .slice(1, -1)
-              .replace(/\\(?=['"])/g, '');
-          }
-          return this.escape(item);
-        })
-      : [];
-    if (useLiteral) {
-      escapedValues.forEach(value => (sql = sql.replace(/\?/, value)));
-      return this.pool.promise().query(sql);
+  // private query method with retry
+  protected async _subQuery(
+    useLiteral: boolean,
+    retryCount: number,
+    sql: string,
+    values?: BasicType[],
+  ): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
+    console.log(`retryCount:${retryCount}`);
+    try {
+      return useLiteral ? this.pool.promise().query(sql) : this.pool.promise().execute(sql, values);
+    } catch (err) {
+      if (retryCount > 0 && (err as QueryError).code === 'ECONNRESET') {
+        console.error({ msg: 'connreset error!!!', err });
+        return this._subQuery(useLiteral, retryCount - 1, sql, values);
+      } else {
+        throw err;
+      }
     }
-    return this.pool.promise().execute(sql, values);
   }
 
   /**
@@ -46,7 +50,7 @@ export default class Client extends Query {
     const conn = await this.pool.promise().getConnection();
     // start transaction
     conn.beginTransaction();
-    return new Transaction(conn);
+    return new Transaction(conn, this.retryCount);
   }
 
   /**

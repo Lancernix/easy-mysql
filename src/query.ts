@@ -5,20 +5,57 @@ import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escap
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
 import Literal from './literal';
-import { CountAndDelParams, InsertParams, SelectParams, GetParams, UpdateParams } from './types';
+import { CountAndDelParams, InsertParams, SelectParams, GetParams, UpdateParams, BasicType } from './types';
 
 export default class Query {
+  retryCount: number;
+
+  constructor() {
+    this.retryCount = 3;
+  }
+
   /**
-   * basic query method, subclass should override this method
+   * query method with retry, subclass should override this method
+   * @param _useLiteral useLiteral
+   * @param _retryCount retry count
    * @param _sql (prepared) sql statement
    * @param _values values corresponding to placeholders
    * @returns sql execute result
    */
-  protected async _query(
+  protected async _subQuery(
+    _useLiteral: boolean,
+    _retryCount: number,
     _sql: string,
-    _values?: unknown | unknown[] | { [param: string]: unknown },
+    _values?: BasicType[],
   ): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
     throw new Error('subclass must override this method');
+  }
+
+  /**
+   * basic query method
+   * @param sql (prepared) sql statement
+   * @param values values corresponding to placeholders
+   * @returns sql execute result
+   */
+  protected async _query(sql: string, values?: BasicType[]) {
+    const count = this.retryCount;
+    let useLiteral = false;
+    const escapedValues = values
+      ? values.map(item => {
+          if (item instanceof Literal) {
+            useLiteral = true;
+            return this.escape(item.text)
+              .slice(1, -1)
+              .replace(/\\(?=['"])/g, '');
+          }
+          return this.escape(item);
+        })
+      : [];
+    if (useLiteral) {
+      escapedValues.forEach(value => (sql = sql.replace(/\?/, value)));
+      return this._subQuery(true, count, sql);
+    }
+    return this._subQuery(false, count, sql, values);
   }
 
   /**
@@ -27,7 +64,7 @@ export default class Query {
    * @param values values corresponding to placeholders
    * @returns sql execute result
    */
-  async query(sql: string, values: unknown[] = []) {
+  async query(sql: string, values: BasicType[] = []) {
     const [rows, _fields] = await this._query(sql, values);
     return rows;
   }
