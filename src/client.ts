@@ -1,45 +1,63 @@
-import {
-  createPool,
-  FieldPacket,
-  OkPacket,
-  Pool,
-  // PoolOptions,
-  QueryError,
-  ResultSetHeader,
-  RowDataPacket,
-} from 'mysql2';
+import { createPool, Pool } from 'promise-mysql';
+import * as Bluebird from 'bluebird';
 import Query from './query';
 import Transaction from './transaction';
 import { BasicType, Config } from './types';
+import Literal from './literal';
 
 export default class Client extends Query {
-  pool: Pool;
+  pool: Bluebird<Pool>;
 
   constructor(config: Config) {
     super();
-    const { connResetRetry, ...rest } = config;
-    this.retryCount = connResetRetry || 3;
-    this.pool = createPool(rest);
+    this.pool = createPool(config);
   }
 
-  // private query method with retry
-  protected async _subQuery(
-    useLiteral: boolean,
-    retryCount: number,
-    sql: string,
-    values?: BasicType[],
-  ): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
-    console.log(`retryCount:${retryCount}`);
-    try {
-      return useLiteral ? this.pool.promise().query(sql) : this.pool.promise().execute(sql, values);
-    } catch (err) {
-      if (retryCount > 0 && (err as QueryError).code === 'ECONNRESET') {
-        console.error({ msg: 'connreset error!!!', err });
-        return this._subQuery(useLiteral, retryCount - 1, sql, values);
-      } else {
-        throw err;
-      }
+  // // private query method with retry
+  // protected async _subQuery(
+  //   useLiteral: boolean,
+  //   retryCount: number,
+  //   sql: string,
+  //   values?: BasicType[],
+  // ): Promise<[RowDataPacket[][] | OkPacket]> {
+  //   console.log(`retryCount:${retryCount}`);
+  //   try {
+  //     return useLiteral ? this.pool.promise().query(sql) : this.pool.promise().execute(sql, values);
+  //   } catch (err) {
+  //     if (retryCount > 0 && (err as QueryError).code === 'ECONNRESET') {
+  //       console.error({ msg: 'connreset error!!!', err });
+  //       return this._subQuery(useLiteral, retryCount - 1, sql, values);
+  //     } else {
+  //       throw err;
+  //     }
+  //   }
+  // }
+
+  /**
+   * basic query method
+   * @param sql (prepared) sql statement
+   * @param values values corresponding to placeholders
+   * @returns sql execute result
+   */
+  protected async _query(sql: string, values?: BasicType[]) {
+    let useLiteral = false;
+    const resolvedPool = await this.pool;
+    const escapedValues = values
+      ? values.map(item => {
+          if (item instanceof Literal) {
+            useLiteral = true;
+            return this.escape(item.text)
+              .slice(1, -1)
+              .replace(/\\(?=['"])/g, '');
+          }
+          return this.escape(item);
+        })
+      : [];
+    if (useLiteral) {
+      escapedValues.forEach(value => (sql = sql.replace(/\?/, value)));
+      return resolvedPool.query(sql);
     }
+    return resolvedPool.query(sql, values);
   }
 
   /**
@@ -47,10 +65,10 @@ export default class Client extends Query {
    * @returns Transaction instance
    */
   async beginTransaction() {
-    const conn = await this.pool.promise().getConnection();
+    const conn = (await this.pool).getConnection();
     // start transaction
-    conn.beginTransaction();
-    return new Transaction(conn, this.retryCount);
+    (await conn).beginTransaction();
+    return new Transaction(conn);
   }
 
   /**

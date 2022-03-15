@@ -371,7 +371,8 @@ it('async transaction error', async () => {
     await tran.commit();
   } catch (e) {
     await tran.rollback();
-    expect((e as Error).message).toEqual(`Unknown column 'ids' in 'where clause'`);
+    // expect((e as Error).message).toEqual(`Unknown column 'ids' in 'where clause'`);
+    expect((e as Error).message).toEqual(`ER_BAD_FIELD_ERROR: Unknown column 'ids' in 'where clause'`);
   }
 });
 // ****** transaction test end ******
@@ -429,7 +430,7 @@ it('async auto transaction error', async () => {
     });
     expect((result as ResultSetHeader).affectedRows).toEqual(1);
   } catch (e) {
-    expect((e as Error).message).toEqual(`Unknown column 'ids' in 'where clause'`);
+    expect((e as Error).message).toEqual(`ER_BAD_FIELD_ERROR: Unknown column 'ids' in 'where clause'`);
   }
 });
 // ****** auto transaction test end ******
@@ -460,5 +461,5 @@ it('use literal', async () => {
 it('disconnect', async () => {
   // this test function make no sense, just for us to finish the test successfully
   // note: disconnect must be called at the last!!
-  client.pool.end();
+  (await client.pool).end();
 });

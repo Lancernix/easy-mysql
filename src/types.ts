@@ -1,16 +1,20 @@
 /**
  * type define
  */
-import { PoolOptions } from 'mysql2/typings/mysql';
+// import { PoolOptions } from 'mysql2/typings/mysql';
+import { PoolConfig } from 'promise-mysql';
 import Literal from './literal';
 
-export type Config = PoolOptions & { connResetRetry?: number };
+// export type Config = PoolOptions & { connResetRetry?: number };
+export type Config = PoolConfig;
 
 export type BasicType = string | number | Date | Literal;
 
 export interface Row {
   [key: string]: BasicType;
 }
+
+export type RowDataPacket = Record<string | number, any>;
 
 // single value operator
 export enum SingleOperator {

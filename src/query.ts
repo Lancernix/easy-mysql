@@ -1,61 +1,30 @@
 /**
  * basic query class, implements the CURD methods
  */
-import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket, escape as _escape } from 'mysql2';
+import { escape as _escape } from 'promise-mysql';
+import { OkPacket } from 'mysql';
 import { getColAndVals, getColumns, getLimit, getOrder, getSet, getWhere } from './clause';
 import { COUNT, DELETE, FROM, INSERT, INTO, SELECT, SET, UPDATE, VALUES } from './constant';
 import Literal from './literal';
-import { CountAndDelParams, InsertParams, SelectParams, GetParams, UpdateParams, BasicType } from './types';
+import {
+  CountAndDelParams,
+  InsertParams,
+  SelectParams,
+  GetParams,
+  UpdateParams,
+  BasicType,
+  RowDataPacket,
+} from './types';
 
 export default class Query {
-  retryCount: number;
-
-  constructor() {
-    this.retryCount = 3;
-  }
-
   /**
-   * query method with retry, subclass should override this method
-   * @param _useLiteral useLiteral
-   * @param _retryCount retry count
+   * basic query method, subclass must override this method!
    * @param _sql (prepared) sql statement
    * @param _values values corresponding to placeholders
    * @returns sql execute result
    */
-  protected async _subQuery(
-    _useLiteral: boolean,
-    _retryCount: number,
-    _sql: string,
-    _values?: BasicType[],
-  ): Promise<[RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]]> {
-    throw new Error('subclass must override this method');
-  }
-
-  /**
-   * basic query method
-   * @param sql (prepared) sql statement
-   * @param values values corresponding to placeholders
-   * @returns sql execute result
-   */
-  protected async _query(sql: string, values?: BasicType[]) {
-    const count = this.retryCount;
-    let useLiteral = false;
-    const escapedValues = values
-      ? values.map(item => {
-          if (item instanceof Literal) {
-            useLiteral = true;
-            return this.escape(item.text)
-              .slice(1, -1)
-              .replace(/\\(?=['"])/g, '');
-          }
-          return this.escape(item);
-        })
-      : [];
-    if (useLiteral) {
-      escapedValues.forEach(value => (sql = sql.replace(/\?/, value)));
-      return this._subQuery(true, count, sql);
-    }
-    return this._subQuery(false, count, sql, values);
+  protected async _query(_sql: string, _values?: BasicType[]): Promise<OkPacket | RowDataPacket[]> {
+    throw new Error('subclass must override this method!');
   }
 
   /**
@@ -65,8 +34,8 @@ export default class Query {
    * @returns sql execute result
    */
   async query(sql: string, values: BasicType[] = []) {
-    const [rows, _fields] = await this._query(sql, values);
-    return rows;
+    const reslut = await this._query(sql, values);
+    return reslut;
   }
 
   /**
@@ -86,8 +55,8 @@ export default class Query {
     const { str: whereStr, arr: optionValues } = getWhere(where);
     // prepared statement
     const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
-    const [rows, _fields] = await this._query(sql, optionValues);
-    return rows as RowDataPacket[];
+    const reslut = await this._query(sql, optionValues);
+    return reslut as RowDataPacket[];
   }
 
   /**
@@ -103,8 +72,8 @@ export default class Query {
     const optionValues = getWhere(where).arr;
     // prepared statement
     const sql = `${SELECT} ${COUNT} ${FROM} ${table}${whereStr};`;
-    const [rows, _fields] = await this._query(sql, optionValues);
-    return (rows as RowDataPacket[])[0][`${COUNT}`];
+    const result = await this._query(sql, optionValues);
+    return (result as RowDataPacket[])[0][`${COUNT}`];
   }
 
   /**
@@ -112,12 +81,12 @@ export default class Query {
    * @param params a object including table and value attributes
    * @returns sql execute result
    */
-  async insert(params: InsertParams): Promise<ResultSetHeader> {
+  async insert(params: InsertParams): Promise<OkPacket> {
     const { table, value } = params;
     const { columnStr, valStr, valArr } = getColAndVals(value);
     const sql = `${INSERT} ${INTO} ${table} ${columnStr} ${VALUES} ${valStr};`;
-    const [rows, _fields] = await this._query(sql, valArr);
-    return rows as ResultSetHeader;
+    const result = await this._query(sql, valArr);
+    return result as OkPacket;
   }
 
   /**
@@ -125,14 +94,14 @@ export default class Query {
    * @param params a object including table、value and where attributes
    * @returns sql execute result
    */
-  async update(params: UpdateParams): Promise<ResultSetHeader> {
+  async update(params: UpdateParams): Promise<OkPacket> {
     const { table, value, where } = params;
     const { setStr, setVal } = getSet(value);
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${UPDATE} ${table} ${SET} ${setStr}${whereStr};`;
     const valArr = [...setVal, ...optionValues];
-    const [rows, _fields] = await this._query(sql, valArr);
-    return rows as ResultSetHeader;
+    const result = await this._query(sql, valArr);
+    return result as OkPacket;
   }
 
   /**
@@ -140,12 +109,12 @@ export default class Query {
    * @param params a object including table and where attributes
    * @returns sql execute result
    */
-  async delete(params: CountAndDelParams): Promise<ResultSetHeader> {
+  async delete(params: CountAndDelParams): Promise<OkPacket> {
     const { table, where } = params;
     const { str: whereStr, arr: optionValues } = getWhere(where);
     const sql = `${DELETE} ${FROM} ${table}${whereStr};`;
-    const [rows, _fields] = await this._query(sql, optionValues);
-    return rows as ResultSetHeader;
+    const result = await this._query(sql, optionValues);
+    return result as OkPacket;
   }
 
   /**
@@ -167,8 +136,8 @@ export default class Query {
     const { str: whereStr, arr: optionValues } = getWhere(where);
     // prepared statement
     const sql = `${SELECT} ${columnStr} ${FROM} ${table}${whereStr}${orderStr}${limitStr};`;
-    const [rows, _fields] = await this._query(sql, optionValues);
-    return (rows as RowDataPacket[])[0];
+    const result = await this._query(sql, optionValues);
+    return (result as RowDataPacket[])[0];
   }
 
   /**
