@@ -41,7 +41,6 @@
   "homepage": "https://github.com/Lancernix/easy-mysqlx#readme",
   "dependencies": {
     "lodash": "^4.17.21",
-    "mysql2": "^2.3.3",
     "promise-mysql": "^5.1.0"
   },
   "devDependencies": {

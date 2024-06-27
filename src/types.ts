@@ -1,7 +1,6 @@
 /**
  * type define
  */
-// import { PoolOptions } from 'mysql2/typings/mysql';
 import { PoolConfig } from 'promise-mysql';
 import Literal from './literal';
 

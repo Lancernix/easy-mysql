@@ -1,4 +1,3 @@
-import { ResultSetHeader } from 'mysql2';
 import Client from '../src/client';
 
 const TABLE = 'node_mysql_test';
@@ -401,7 +400,7 @@ it('async auto transaction', async () => {
     });
     return result;
   });
-  expect((result as ResultSetHeader).affectedRows).toEqual(1);
+  expect((result as { affectedRows: number }).affectedRows).toEqual(1);
 });
 
 it('async auto transaction error', async () => {
@@ -428,7 +427,7 @@ it('async auto transaction error', async () => {
       });
       return result;
     });
-    expect((result as ResultSetHeader).affectedRows).toEqual(1);
+    expect((result as { affectedRows: number }).affectedRows).toEqual(1);
   } catch (e) {
     expect((e as Error).message).toEqual(`ER_BAD_FIELD_ERROR: Unknown column 'ids' in 'where clause'`);
   }

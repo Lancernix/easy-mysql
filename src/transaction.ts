@@ -1,4 +1,3 @@
-// import { FieldPacket, OkPacket, PoolConnection, QueryError, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { PoolConnection } from 'promise-mysql';
 import * as Bluebird from 'bluebird';
 import Query from './query';
