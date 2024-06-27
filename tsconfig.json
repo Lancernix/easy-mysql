@@ -8,6 +8,7 @@
     "declaration": true,
     "declarationDir": "./lib/typing",
     "outDir": "./lib",
-    "strict": true
+    "strict": true,
+    "allowSyntheticDefaultImports": true
   }
 }
